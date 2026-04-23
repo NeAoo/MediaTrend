@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境（两个环境都要忽略）
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 日志和数据（运行时生成）
+logs/
+*.log
+
+# 环境变量（包含敏感信息）
+.env
+
+# 临时文件
+nul
+*.html
+.DS_Store
+
+# TrendCrawlerRuntime 运行时数据
+TrendCrawlerRuntime/browser_data/
+TrendCrawlerRuntime/data/
+TrendCrawlerRuntime/*.db
+
+

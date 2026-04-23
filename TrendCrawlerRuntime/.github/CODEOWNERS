@@ -1,0 +1,18 @@
+# 默认：仓库所有文件都需要 @RuntimeMaintainer 审核
+*                                   @RuntimeMaintainer
+
+
+.github/workflows/**               @RuntimeMaintainer
+
+
+requirements.txt                   @RuntimeMaintainer
+pyproject.toml                     @RuntimeMaintainer
+Pipfile                            @RuntimeMaintainer
+package.json                       @RuntimeMaintainer
+package-lock.json                  @RuntimeMaintainer
+pnpm-lock.yaml                     @RuntimeMaintainer
+
+
+Dockerfile                         @RuntimeMaintainer
+docker/**                          @RuntimeMaintainer
+scripts/deploy/**                  @RuntimeMaintainer
