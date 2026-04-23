@@ -213,7 +213,7 @@ class XiaohongshuCrawler(BaseCrawler):
             
             # 构建命令
             cmd = [
-                "uv", "run", "main.py",
+                "python", "main.py",  # 改为直接运行，不再使用 uv run
                 "--platform", "xhs",
                 "--lt", "qrcode",
                 "--type", "search"
