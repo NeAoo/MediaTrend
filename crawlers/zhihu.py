@@ -194,7 +194,7 @@ class ZhihuCrawler(BaseCrawler):
 
             # 构建命令
             cmd = [
-                "uv", "run", "main.py",
+                "python", "main.py",
                 "--platform", "zhihu",
                 "--lt", "qrcode",
                 "--type", "search"

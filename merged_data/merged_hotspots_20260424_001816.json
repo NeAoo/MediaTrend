@@ -1,0 +1,648 @@
+{
+  "metadata": {
+    "generated_at": "2026-04-24T00:18:16.035076",
+    "total_count": 30,
+    "source_statistics": {
+      "微信公众号": 16,
+      "xiaohongshu": 14
+    },
+    "sources": [
+      "wechat",
+      "xiaohongshu"
+    ]
+  },
+  "hotspots": [
+    {
+      "title": "上海中考语文|作文15年命题趋势拆解",
+      "source": "微信公众号",
+      "publish_time": "2026-04-24T00:11:30",
+      "content_summary": "抓准上海中考作文核心得分逻辑 告别盲目备考,作文稳稳冲高分#上海中考#上海初三 #中考作文 #上海中考语文 #初中语文 #中考备考...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd9DgRv5OhjkASrfBAM1KOHTYlK6EF_zjSMN-FXEheBJwRuFL74ToDh-wl03fesekJyCCgcz5gKnc_V1CEUqFtAU5tvSeGwCM_qsuiytq8ha__NlwS0fZFaHqszpigxT9X8QRK0boxojzizJsALO5C-7FCb-6tHZWbnE5DDlSTsnJJj3x9Nw6p-Fg..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "汪汪也叫Peter汪",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考数学压轴题的分析与解",
+      "source": "微信公众号",
+      "publish_time": "2026-04-24T00:03:56",
+      "content_summary": "48道题,共计97页,每天研究一道,中考之前还是来得及的!一开始我是想让孩子做对压轴题的,模考的时候数学110分左右,到后来...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd97elwsHNkZf0XhkcQ0F3S2EmYHcVUk_szJoTSC31egixixz6p9PsmIVMg6Y34c9ZdvPpYHpLtmOkLgramJWtUtMWbyuII5ZnuA3IPDEjdTgW2gErgpOrJJxnKEMDvRkdmNVCOmfCCQG-DJ2PhEhlXCRAan0gajualRt6JAuUeIpbwdVqCwyPdzA..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "向前走着",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "建立在掌握了中考数学基础知识点上的教辅",
+      "source": "微信公众号",
+      "publish_time": "2026-04-24T00:03:56",
+      "content_summary": "这是一本帮助孩子更好地在中考基础知识复习之后,及时查找短板,把握重点,突破难点的数学教辅.书中绝大部分是2015、2016的...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd97elwsHNkZf0XhkcQ0F3S2EmYHcVUk_szJoTSC31egixixz6p9PsmIeGYg5noBGgvwYcEGzWG585G0B_RRRD4M17aUVgzFPYK0TuExfHWtHuwNeh5JKwrQF73w9S1dQtSQno8U03L3Ljw-isomxXWTAsWSBagkV07IxGWoTJs9YWTJmCU1UgHwQ..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "向前走着",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "立项名单!关于2026年度省职业教育教学改革研究课题评审结果的公示",
+      "source": "微信公众号",
+      "publish_time": "2026-04-24T00:03:00",
+      "content_summary": "4月22日,吉林省教育厅官网发布《关于2026年度吉林省职业教育与成人教育教学改革研究课题评审结果的公示》,吉林省教育厅组织...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd9ki6yZu4LyjtWSUV17K-XTgfUQl5yomXIopAyf4uWezQSRnv3a8urZkL47xUNbQwmcFCVFTjnSceweZV-wG5QzPdszhQhTYMpjiSnLibSd_1KLKz3Kbw2Gf8Ui-R8dOlKnu0weUiltDVYCJIU03XYuTsVzrWbxpSqhkIhRwIB86lj3x9Nw6p-Fg..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "高职教发工坊",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "事关中考、高考!内蒙古发布告知书!",
+      "source": "微信公众号",
+      "publish_time": "2026-04-24T00:02:57",
+      "content_summary": "(电信\\联通)宽带安装173-0475-5672 致全区涉考校外培训机构的告知书2026年中考、高考在即.为净化考试招生环境,维护考生及...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd98LajaYyK9dzhORxDMg8Jh0DgSHGaeS8bO4stVbsvn_PTVaqLyXGoTrkQt3Wbr7_4Uf224G2QJ3UtMeEHxnEQgrxZw9f9UQow1csdJ76I1u-EMCyMjrKvgZ66eNEPfI90fgeA5jZHJd0Nis8QePIQuK9DlV3Ph_jBEZ7yzHqmOGB5Nu7CnoSqqg..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "通辽微时代",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "广东就进一步深化现代职业教育体系建设改革征求公众意见",
+      "source": "微信公众号",
+      "publish_time": "2026-04-24T00:02:12",
+      "content_summary": "鼓励支持高水平大学深度参与职业教育改革,推动本科高校增加面向职业学校毕业生的招生计划.推进“学历证书+若干职业技能等级...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd91N-R0GxXdRupmVztOh8PIc5p8jMZku1neZpyljA9RExqxLbJPdN3W60IT_aB7UpoZKTmbJ5lM-KdTjJFtgvchVei16Do3Hf2CsViXqgsoOqADQJiXBcre4r_7jyvfjTgOJApcm6o8bJfzcvMSTApUAJBE3CQkvZC-oZfAFNcATs89kyxDwoXvg..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "职教新媒",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "教育部基础教育综合改革沈阳实验区实践探索 | “健康第一”篇(9)构建四位一体机制 守护留守儿童心灵成长",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:47:21",
+      "content_summary": "案例经验入选第三届教育局长论坛“地方教育改革创新成果百佳案例”,为农村区域留守儿童心理援助提供了可借鉴的实践样本.强化...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd9xYmX9mhX-2-yzCnPwh_8M3eFNz1A9mmTstt0OpuuLEz8NlaEX28F7tfODbKG5ViaDBi88DZW9WnmHnPHwNzhShWX7QX-WVbDAiYbuEi2g_8PUNGkqYotQQ0Qq4GP7PcxLsO5XAqK_0WUoYxOWo6SOHfoYMDyig-yw8caY8AODxP1AfaFW2DefQ..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "沈阳教育发布",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "英语教育改革落地说清楚(可领取官方最新阅读标准)",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:32:06",
+      "content_summary": "教育部在2026年全国教育工作会议上已经明确表态:英语不取消主科地位.这个信号已经非常清晰了.那些＂英语要退出高考＂的消息...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd90FjWvoANp4pyxWjBSTPOS6U7Ta4lKTSgG3y9qcGgYcqs1ABAS2tqXnq_IyEa-fiV2EP-Bp5VJyTJNHaOJJY7JNyqYtqg-rs0RrAd7opmwV2gD8WT038Dv9tBq0JgH50vS6WitbYu6ng3HajXLqZea9uuv5Pj_ogLQ1fK94qkr3kY-UZGbO56rA..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "鲁子问",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考英语核心考点:名词复数",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:27:31",
+      "content_summary": "一、名词复数考点考情分析名词复数是中考英语语法的基础核心考点,主要考查规则变化的拼写规律、不规则变化的特殊记忆、单复数...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd9XQJiMV1NYvm55BZGBnvShM7zWczD7W1FYF2eD7L3oAims5rEDnkfFq0dv8AckKD-tOrzGzYxmuILDl9DQ8Zfxj6jS6Oxp_eZzVelrrzgCbgG0nooWRpNvC1M3XweetdNTLeg9jblD3pfYnZwMQmT8V_U30c2FMtRH3vlnuv1UJhr1dbZWbKUeQ..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "凡一仁爱英语",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "博白县召开城区小学教育教学评价改革工作会议",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:24:17",
+      "content_summary": "为全面深化新时代教育评价改革,进一步规范学校办学行为,提升育人质量,4月23日,博白县城区小学教育教学评价改革工作会议在...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd9kyMhT5BtNUFYVeEU-ESsluZ7o-rNtURXXNoNxHXeh4oeQ03IwUrtXftysrDT3E_3erR80VZIvsPs68pbSopWW3Q4d4HC31Ef8FKJmLAx-R_UTIBdRgOhvn5Qv4NFodMaBUpkBl_DjfO56iDZlJrmLY8Pru7Vbc8jogWwcLzezJzs46dn8Efgxg..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "博白教育在线",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考550分左右,选普高还是职校?",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:20:34",
+      "content_summary": "中考550分,绝不是梦想的终点,而是一个新起点.选择一条适合孩子的路径,同样能走出一条通往大学、通往高质量就业的精彩人生...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd9jvm0HhKLjWBJe23ueIxKAXLO1wEdjBV-yJmW1cinuwyMorFeJBbitQ_mnAabf1Wdz2QBmLrYkWSL72hOy-ycrDQxkIMcynn24BxnkcjaYQHsu_QRxDS9UQ3CKnftelv6oNQayoNJjgjfBejUuBRAT8jTCo-oYQK4ez7HCww_YLxf_71bqkOtiw..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "广报求学",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考模拟|2026年河北省九年级数学巩固(十)(河北省卷)",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:19:48",
+      "content_summary": "*********************************公众号内容来源于互联网,如有侵权,联系删除2026届河北中考QQ交流群2026届河北中考微信群**********...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd93cm5vcRE6KbgQtPy9KtsSMWlFnvXNFrjU-DjOaqAqUpqtqJKSifqjqEKgRhPGAKQL0p7MSEN1UwFok-XUAOu6Pk1q7K_KhwFDcEEXyNwfI5QJbDz9BRJquVpTCo7EbnEl95KvUR7izGRmGklyZXYWNbsgBbZvVIrg3YSFHHg2AIGX_iHL9MadA..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "信息化工作坊",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考英语130+必看!听力扣分超过1分就危险了",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:10:06",
+      "content_summary": "中考英语想上130+,听力最多只能扣1分.听力扣3分以上都算听力差,别再觉得扣三五分无所谓.不然130+基本不可能,这是铁律我...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOCYWxD3mzSQgcpHGy8eg8blqXa8Fplpd9KApzMAny7qQJtbfWUEcFUquiR60-5JqjFLoxzRd47VwF39Dsm1WSB8jy-BGWjFTXQDAF1HOZyqyVy9_PRoAf2pZbxFA2iVhbjOVP522juWmkVSs088QJ57Usx9G0SOpPh8EVMyeKqHViDE-wWaG4N6q9nN8oWdbdgtiUABOOk6oHpHkoPMgL3A..&type=2&query=%E4%B8%AD%E8%80%83&token=F8E74E83D434CF285D5B0D7FAF02F8445DACCFBA69EA4575",
+      "author": "WEnglishSH讲英文",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "全区教育大会召开 聚焦重点改革破题 奋力打造与中心城区地位相匹配 让群众满意的教育强区",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T21:03:21",
+      "content_summary": "推动教育改革任务落地落实.要聚焦立德树人,在铸魂育人上持续发力、久久为功,推动思政课改革创新,刚性落实“五育并举”,...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd9ilmC5rAuMrboC0TNJYY4aXK2TGJzEg60ERoI8ecGYYzXZKd8ZfG9q9KoXyz_eHOYeG4EtrDV4B_AAmhr7Xjwj6RfcOzMRNjRX7pUpFE3WGNHx8C-XQTsuTV9l5NqFsgZq6-z46tSF8nwLNRIzdLE5AVjJIBvnpPlRwv51VhNk2p5Nu7CnoSqqg..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "清城发布",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "【转载】城厢教育·学校展播|基础教育综合改革实验区建设系列报道二十四——城厢区沟头小学",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T20:31:59",
+      "content_summary": "近年来,在各级领导的关心支持下,学校面貌焕然一新,教育教学硕果累累,各项工作迈上新台阶.先后获评“莆田市三八红旗集体”...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd97tWT-clGpHSTMozJ3z6C4oIlOEd6J4HSOISJL3Z57-eBwyqYVsFLKt47jW3zUN9LTnVgdECVzrapZJ_VIv1_fXNKdpZJ-9srFvFCLCuqx6Nk3u5-WdlHHVdl7S0AMphqD6GOxrOsXW1HS6Mat4b_bixvoKIlwZiKacn5F2mudu1S6t2rFt2rnA..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "莆田第三中学",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "2026年高等学校教育教学改革研究和科学研究项目立项结果公示",
+      "source": "微信公众号",
+      "publish_time": "2026-04-23T15:29:47",
+      "content_summary": "依据《海南省教育厅关于开展2026年度海南省高等学校教育教学改革研究及科学研究项目申报工作的通知》(琼教高〔2025〕106号)...",
+      "url": "https://weixin.sogou.com/link?url=dn9a_-gY295K0Rci_xozVXfdMkSQTLW6cwJThYulHEtVjXrGTiVgS7tmHmw5-4kOt34e4IqUtY0cpHGy8eg8blqXa8Fplpd9NI4bSRAcv0BpuKf8pY14LsUTQSJk0WtP4C2se58h34xtn9g9H_rLOQodwI7_IwuDKoGQJZmfdY-ES8Fx8s-VTxLutv8CBZf38gXLvMEBYx-aj3fOCtW_9GQM-efIvo1jVVTLAAy_e3ztk49dLgQ0huQhqOdLrLMq7dDCWAHqsrXs46dn8Efgxg..&type=2&query=%E6%95%99%E8%82%B2%E6%94%B9%E9%9D%A9&token=F8E71083BB5BA04733356311C2F956FB33B43F2169EA456C",
+      "author": "国育中培教育科技院",
+      "popularity": null,
+      "cover_image": null,
+      "image_list": [],
+      "tags": [
+        "教育",
+        "公众号",
+        "教育改革"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考科学力学选择题",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-24T00:15:38",
+      "content_summary": "挑了一些模拟卷中的力学选择题#浙江中考[话题]# #浙江中考科学[话题]##中考物理[话题]# #初中力学[话题]# #选择题[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea45aa000000001f030c04?xsec_token=AB-Kw1pgh4a9ki1JHIdRngngCSJw57-8ZGBN0Let0zcos=&xsec_source=pc_search",
+      "author": "速溶矿泉水",
+      "popularity": 0.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/9fc543c617102aaad13646e63741e739/1040g2sg31vaf7ui0iikg5pi8ag60uelnh9cca9o!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/9fc543c617102aaad13646e63741e739/1040g2sg31vaf7ui0iikg5pi8ag60uelnh9cca9o!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/b9206fd5175c34296551126711da69e7/1040g00831vaf7uldiq6g5pi8ag60uelnrblqnro!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/feca39d0b1202c8508452efc4da36f2b/1040g2sg31vaf7ul5jqkg5pi8ag60uelntgato98!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/558009eb291fa48d76c34045a20c31ac/1040g00831vaf7ul42g6g5pi8ag60uelnodcjc98!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/975a0de8baae98aa192c03ea6a0d8758/1040g00831vaf7ukf3qcg5pi8ag60uelnj3ms9gg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/73d0da4accf7c41528e22dc27cc6c04c/1040g2sg31vaf7ukciakg5pi8ag60uelnc01ma7o!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/48371219ae7f895d810d13c3b3c5229c/1040g00831vaf7uk8jq605pi8ag60uelngbm0vpg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/b3c1cde05ea8227579be9c08f22430c0/1040g2sg31vaf7ukajq605pi8ag60ueln4u2obag!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/baffba749a8b4fb5dcfec9bb097adefb/1040g2sg31vaf7ukb2qkg5pi8ag60uelntr3oisg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/d82edee2e0aaa34364e6de9c8615adcb/1040g2sg31vaf7ukbigkg5pi8ag60uelnaieka6o!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/911e559b73d0b0d3bdf55333da2ef26f/1040g00831vaf7uiu2q6g5pi8ag60uelnlpkrrv0!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/4878e540c80ca9caae0184b906a6af90/1040g00831vaf7uinia6g5pi8ag60uelnpuuh68g!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/fd6b1ccb130b08da2c185618c47d7af9/1040g00831vaf7uir2q505pi8ag60ueln99q2lbo!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/c11d6032fd60d3a4bd7577b2f7458c98/1040g2sg31vaf7ui2jqjg5pi8ag60uelnktc8op8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/bf85a845f50a71f0a5a591c2ea2867fa/1040g00831vaf7ui8iq505pi8ag60uelnqb7idm8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/0cf1c489db7efbe3b4f00d4a749ed6bc/1040g00831vaf7ui13q6g5pi8ag60uelnniusr40!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "浙江中考",
+        "浙江中考科学",
+        "中考物理",
+        "初中力学",
+        "选择题"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "杭州中考招生政策的启示",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:55:49",
+      "content_summary": "最近杭州市教育局关于中考招生出台“四个严禁”，三个签约大户书记表态发言，二军高承诺坚决贯彻执行。若成真，意味着首创班，领军班，丘班，卓班，二连报三连报统统消失，届时杭州高中格局将重回十年前……\n\t\n4年前还没有杭二东河首创，择校时杭二滨江，杭二东河就是两所完全不搞滴学校，学霸进杭二，普娃进东河，生源互不打扰，填志愿互不相干。类似情况目前其实还有，就是杭四集团，杭四下沙，杭四吴山，杭四江东就如同三个独立的学校，没有家长填志愿时会把三者关联起来，杭四下沙后面肯定接着填重高，没人会直接连报杭四吴山。这就是弱集团化格局:重高分校具有独立性，和本部弱关联。\n\t\n强集团化捆绑连报是从十年前学紫诞生开始的，与其说是学军成立了紫金港分校，不如说学军西溪本部扩招16个班，放在紫金港上课。这样强捆绑连报既能避免本部大幅度扩班分数线下降学校排位后撤，又能捞到大量本部滑落的优质生源。这个模式让学军在近十年尝尽甜头，但当家长在十四凤起和学紫之间大比例倾向学紫，甚至弃杭高选学紫，三连报对中后部重高全部形成阻断，所有重高被逼加入招生内卷后，矛盾被彻底激化，教育局喊停了。（这就是我前几篇分析学军三连报是败笔的底层逻辑",
+      "url": "https://www.xiaohongshu.com/explore/69ea4105000000001f031003?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnvHzYfz5o_A7gCiTqdK8lAc=&xsec_source=pc_search",
+      "author": "Kantina",
+      "popularity": 2.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/1a4111f0e4a9368a6c1ea69ad306699a/1040g00831vabud3n2g405o9241v08qkbg24uqgg!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/1a4111f0e4a9368a6c1ea69ad306699a/1040g00831vabud3n2g405o9241v08qkbg24uqgg!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "广州中考：前八普通班还是区龙头重点班？鸡",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-24T00:04:02",
+      "content_summary": "#广州中考[话题]# #前八所[话题]# #区属龙头[话题]# #鸡头还是凤尾[话题]# #华附[话题]# #省实[话题]# #执信[话题]# #广雅[话题]# #志愿填报[话题]# #2026中考[话题]# #高中生活[话题]# #陪读妈妈[话题]# #初三家长[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea42f20000000011020006?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnl3KBEFKCjuzf8vucGtXRm8=&xsec_source=pc_search",
+      "author": "清风吹尽浮华",
+      "popularity": 3.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/26bb8e12378edf677a6e315ba6c2cb7e/notes_pre_post/1040g3k831vaeo929k0705n9vpknkiq27p076998!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/26bb8e12378edf677a6e315ba6c2cb7e/notes_pre_post/1040g3k831vaeo929k0705n9vpknkiq27p076998!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/b7aba8ca8665cf351ff00d528e50a820/notes_pre_post/1040g3k831vaeo929k07g5n9vpknkiq2735ehmv0!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/909686257ef0b7073983a507f1939ff4/notes_pre_post/1040g3k831vaeo929k0805n9vpknkiq279rpldh8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/67b087a337c0bfa5ed5d6b9eec53ac0a/notes_pre_post/1040g3k831vaeo929k08g5n9vpknkiq27cgbeee8!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "广州中考",
+        "前八所",
+        "区属龙头",
+        "鸡头还是凤尾",
+        "华附",
+        "省实",
+        "执信",
+        "广雅",
+        "志愿填报",
+        "2026中考",
+        "高中生活",
+        "陪读妈妈",
+        "初三家长"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "祝大家中考顺利上岸！",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-24T00:02:07",
+      "content_summary": "只有家教人才懂吧😁\n总之祝大家能考上心仪的高中。！#中考加油[话题]# #中考上岸[话题]# #祝大家前程似锦[话题]# #逢考必过[话题]# #家庭教师[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea427f0000000020013000?xsec_token=AB-Kw1pgh4a9ki1JHIdRngntmArVmmCp_bvjKE_MHrumI=&xsec_source=pc_search",
+      "author": "凤梨雷达",
+      "popularity": 0.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/5871d33e5f6d5cdbf0e3e164f3a147bb/notes_pre_post/1040g3k831vaepa0u2idg5o4ci4cg8qipc18n5gg!nd_dft_wgth_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/5871d33e5f6d5cdbf0e3e164f3a147bb/notes_pre_post/1040g3k831vaepa0u2idg5o4ci4cg8qipc18n5gg!nd_dft_wgth_webp_3"
+      ],
+      "tags": [
+        "中考加油",
+        "中考上岸",
+        "祝大家前程似锦",
+        "逢考必过",
+        "家庭教师"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "官宣！2026浙江中考：社会闭卷、时间提前、",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:57:49",
+      "content_summary": "#浙江中考[话题]# #2026中考[话题]##浙江中考新政[话题]# #中考改革[话题]# #初三家长[话题]# #升学规划[话题]# #一模[话题]# #中考加油[话题]# #中考志愿填报[话题]# #多元升学途径[话题]# 2026年浙江中考社会科目闭卷，分值100分，考试时间提前至6月20、21日，出分6月30日，录取8月底前完成。全省统一命题，所有招生通过省平台，严禁违规招生。分配生比例提高至70%~75%，随迁子女政策放宽。",
+      "url": "https://www.xiaohongshu.com/explore/69ea417d000000002003bf26?xsec_token=AB-Kw1pgh4a9ki1JHIdRngntL2z08kKH4kJ3OezITIWGc=&xsec_source=pc_search",
+      "author": "学途有风",
+      "popularity": 2.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/6602b5bf1b3e653d6804cc5d48ce4571/1040g00831vael7u42g6g5qdgrk6cv8tsg4d82u8!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/6602b5bf1b3e653d6804cc5d48ce4571/1040g00831vael7u42g6g5qdgrk6cv8tsg4d82u8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/16f25cc0a54d1223858a60782b6b4b9c/1040g00831vael7u42g3g5qdgrk6cv8tsba82mh8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/ce44729fedd173b5cfdef136ed308bff/1040g00831vael7u42g4g5qdgrk6cv8tshtcvmjg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/ce0bc395de3b4ac2794cfa48ad86048a/1040g00831vael7u42g605qdgrk6cv8tsgi1mpfg!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "浙江中考",
+        "2026中考",
+        "浙江中考新政",
+        "中考改革",
+        "初三家长",
+        "升学规划",
+        "一模",
+        "中考加油",
+        "中考志愿填报",
+        "多元升学途径"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考倒计时59天，加油！",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:57:27",
+      "content_summary": "四句小诗·赠女儿中考59天\n磨剑今朝五十九，\n心平气定自风流。\n胸藏万卷乘风起，\n落笔从容占鳌头。\n#中考加油[话题]# #中考上岸[话题]# #备战中考[话题]# #金榜题名[话题]# #金榜题名前程似锦未来可期[话题]# #家有初中生[话题]# #以梦为马不负韶华[话题]# #学业有成前程似锦[话题]# #初中学习方法[话题]# #中考[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea41670000000012029802?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnmKnK4HRguzp_71-L53WciM=&xsec_source=pc_search",
+      "author": "静待花开",
+      "popularity": 0.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/57bd4898204d8eeaebf4eca6eaa9cbf4/notes_pre_post/1040g3k031vael3po40005npuh9rg95b8oteen7o!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/57bd4898204d8eeaebf4eca6eaa9cbf4/notes_pre_post/1040g3k031vael3po40005npuh9rg95b8oteen7o!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "中考加油",
+        "中考上岸",
+        "备战中考",
+        "金榜题名",
+        "金榜题名前程似锦未来可期",
+        "家有初中生",
+        "以梦为马不负韶华",
+        "学业有成前程似锦",
+        "初中学习方法",
+        "中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "㊙️西安中考英语新题型必背短语🔥",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:49:59",
+      "content_summary": "带了这么多届西安中考，我发现很多孩子在新题型（语篇填空/完形）上都有个致命误区：\n总想着用语法去推导，结果发现四个选项带进去都通，或者填空怎么填都不对。\n宝子们，听老师一句劝：\n现在的西安中考新题型，一大半考的是【固定短语】，而不是【半固定】或单纯的语法！\n❌ 普通人： 看到填空想语法、想句子结构。\n✅ 提分党： 看到关键词直接反应出固定短语，3秒填完！\n比如 as a result, so far, come up with... 这些东西考的就是肌肉记忆。你背的是“半固定”（还要现想怎么变），考场上考的是“死规定”，差一个介词就是 0 分！\n为了帮大家精准避坑，我把给内部学生用的**【西安中考核心短语 150 金牌清单】**整理好了。👇\n✅ 为什么要这份清单？\n1️⃣ 去伪存真： 剔除了那些不痛不痒的词，全是西安中考高频出现的“死搭配”。\n2️⃣ 逻辑衔接： 针对语篇填空，整理了最容易丢分的逻辑短语（如 instead of, believe it or not）。\n3️⃣ 动词命脉： 150个短语里，动词短语占了大头，因为完形填空的命题点就在这儿。\n这一份 10 页的 PDF，真",
+      "url": "https://www.xiaohongshu.com/explore/69ea3fa70000000020007001?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnnv88yCVN-4beeECMbGI6kQ=&xsec_source=pc_search",
+      "author": "Echojpw",
+      "popularity": 1.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/16343b6de458a149ce714f75d6b2ff19/notes_pre_post/1040g3k831vaeef672g705pn3j1p7ceo9fij5re8!nd_dft_wgth_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/16343b6de458a149ce714f75d6b2ff19/notes_pre_post/1040g3k831vaeef672g705pn3j1p7ceo9fij5re8!nd_dft_wgth_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/c88266c049a0cd33c9b167febb8c42c7/notes_pre_post/1040g3k831vaeef672g7g5pn3j1p7ceo9onsd6og!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/a3ebbe9b5ac9ddb06f4573be38ed96f1/notes_pre_post/1040g3k831vaeef672g805pn3j1p7ceo96evp34g!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/76585d98dedbaaf420a1f2f6f1fffd6c/notes_pre_post/1040g3k831vaeef672g8g5pn3j1p7ceo9pt5g2ng!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/d374bd4606b5489ffe0c6f680ca07f6c/notes_pre_post/1040g3k831vaeef672g905pn3j1p7ceo9ipf5fug!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "西安中考",
+        "初中英语笔记",
+        "中考英语新题型",
+        "英语提分技巧",
+        "西安家教",
+        "语篇填空",
+        "中考冲刺",
+        "英语固定短语",
+        "学习方法"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "河北中考初三牲",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:46:43",
+      "content_summary": "今天是2026年4月23日 距离河北中考还有59天\n刚到家躺在床上刷着抖音，看大家发的“三年磨一剑”我倒是个例外，说例外都抬举了，大概就是混了半年，连剑都没磨亮\n面对马上到来的中考，我没有预想中的紧张只剩一片麻木的空\n回想起前天的体考 就好像是一场虚无缥缈的梦\n前两年的体育课基本都是自由活动，那时候对体考完全没概念，日子就跟着舒服的风轻轻飘走了，体重跟着一起飘，飘到我每次上秤都不敢抬头看数字\n初一唯一一次体测，800米跑了4分55秒 说白了就是懒 可后来拼了命地练，也没见快几秒，体重还像焊死在秤上，半分都不肯往下掉。\n直到初三春天，我才开始真正的练习，体育课开始了魔鬼训练\n从上周开始，班里就一直在聊体考，我尽量不跟着掺和，怕自己那点可怜的底气，被别人的轻松晒得渣都不剩\n可就在前天，我还在纠结腿粗穿短裤会不会显胖越纠结越清楚，再怎么遮，身上的肉也藏不住，连风刮过的时候，都能感觉到自己和别人不一样的笨重\n可晚上还是跑去超市买了一大堆零食，吃的时候很麻木，好像只有撑着胃，才能压下一点慌\n昨天吃了很多很早就睡了\n大家都很紧张，我却莫名有点期待，大概是觉得考完就能彻底结束这种折磨了 期待着有没有",
+      "url": "https://www.xiaohongshu.com/explore/69ea3ee3000000001f031004?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnjEasgAf9fmEErOEAEERP9s=&xsec_source=pc_search",
+      "author": "养只猫为ta",
+      "popularity": 0.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/2678e0e01bb5f7949c9238dda8d7dd7f/notes_pre_post/1040g3k031vae8bnoiq6g5ou28hp9i13v06t9vmg!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/2678e0e01bb5f7949c9238dda8d7dd7f/notes_pre_post/1040g3k031vae8bnoiq6g5ou28hp9i13v06t9vmg!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "体考",
+        "遗憾"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "初三中考美术必胜",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:45:36",
+      "content_summary": "高老师用ai做了好几天。同学们加油，中考必胜[加油R][加油R][加油R]#石家庄中考美术集训[话题]# #石家庄美术[话题]# #石家庄中考[话题]# #美术中考[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea3ea0000000001901e000?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnigW8sQg6thvSdtYqw0wR2s=&xsec_source=pc_search",
+      "author": "Ann安老师石家庄中考美术",
+      "popularity": 0.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/ec88d4cde4b1fb977c55c85040bad91b/1040g2sg31vaeaob61mdg5nr5upu08s1te30cj2o!nd_dft_wgth_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/ec88d4cde4b1fb977c55c85040bad91b/1040g2sg31vaeaob61mdg5nr5upu08s1te30cj2o!nd_dft_wgth_webp_3"
+      ],
+      "tags": [
+        "石家庄中考美术集训",
+        "石家庄美术",
+        "石家庄中考",
+        "美术中考"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "2026年南京市秦淮区语文中考一模",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:42:09",
+      "content_summary": "#中考语文[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea3dd10000000019025c04?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnpaD3IlN2uuX0irVRYUvs4U=&xsec_source=pc_search",
+      "author": "yyyyya",
+      "popularity": 2.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/3977b189bc4d08cfb2e2f2686247b71f/notes_pre_post/1040g3k031vae85t22s305n9u752kglhsh3acgfo!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/3977b189bc4d08cfb2e2f2686247b71f/notes_pre_post/1040g3k031vae85t22s305n9u752kglhsh3acgfo!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/3ba192dcb71ad3c0b4ea4341c792a5e7/notes_pre_post/1040g3k031vae85t22s3g5n9u752kglhsbuvrr30!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/2a6f314f532ed664784908ce8bf868f2/notes_pre_post/1040g3k031vae85t22s405n9u752kglhsbc2j2co!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/923a19866aebf4abc7743f5c46d68d13/notes_pre_post/1040g3k031vae85t22s4g5n9u752kglhsa2ao4sg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/ee5a6ef8d837c7ab74f513c5d9b8764f/notes_pre_post/1040g3k031vae85t22s505n9u752kglhsu6o33no!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/8274e578dcba74f0d25dbc685dce1bda/notes_pre_post/1040g3k031vae85t22s5g5n9u752kglhsvkkeorg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/01a228a000f37307ca87a2895b57ece8/notes_pre_post/1040g3k031vae85t22s605n9u752kglhsel7end0!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/3d3e6ed2ca7e119de6ea074c7289e8f4/notes_pre_post/1040g3k031vae85t22s6g5n9u752kglhs9djrgm8!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "中考语文"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "初中中考英语词汇词性转换大全",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:38:33",
+      "content_summary": "初中中考英语单字词汇词性词形转换常见词汇大全汇总word电子版📚✨\n\t\n初中英语党集合啦！还在为单词词性转换头疼到掉头发吗？这份超全的词汇资料包来啦～\n\t\n作为中考生，单词背了又忘、词性混淆真的太让人抓狂了😫 特别是遇到阅读填词和语法填空，明明认识单词却写不对形式，分数白白溜走真的很不甘心！\n\t\n但自从有了这份词汇大全，我终于和“词性转换困难症”说拜拜啦！📈 从基础单字到高频考点，词性变化、词形转换全都整理得清清楚楚，直接打印就能背，再也不用自己熬夜整理笔记啦～ 看着试卷上越来越少的红叉，连老师都夸我英语进步超明显！💯\n\t\n这份文档绝对是中考英语的“提分秘籍”！随时翻用不踩坑，点击下方就能带走～[买爆R][买爆R][买爆R]\n#初中英语[话题]# #中考词汇[话题]# #词性转换[话题]# #英语单词[话题]# #学习资料[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea3cf90000000020007001?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnqgVjdEUn1d-o3Ue-RWrVBs=&xsec_source=pc_search",
+      "author": "心中未来港",
+      "popularity": 0.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/0f9927664c46e1ee7faa8e0cf0de158f/spectrum/1040g0k031vae5ggf1u005ovg98cjq10uti9sha8!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/0f9927664c46e1ee7faa8e0cf0de158f/spectrum/1040g0k031vae5ggf1u005ovg98cjq10uti9sha8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/b56d7a53e026ffc036c855b3d20d2e24/spectrum/1040g0k031vae5ggf1u0g5ovg98cjq10uvv97ev8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/6e91023d33bda26eee3a794e1025cb0f/spectrum/1040g0k031vae5ggf1u105ovg98cjq10uq2i3428!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "初中英语",
+        "中考词汇",
+        "词性转换",
+        "英语单词",
+        "学习资料"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考只剩两个月，作文这样搞，多拿20分",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:33:15",
+      "content_summary": "#作文[话题]# #作文范文[话题]# #中考复习[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea3bbb0000000019032400?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnudBznv7mCMar0OKPq9XNbA=&xsec_source=pc_search",
+      "author": "夏末（yuwen）",
+      "popularity": 8.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/2d047967fa0480c265190c91791b6a7e/notes_pre_post/1040g3k031vae0eh11u004b7sf8e1p0ho2vd3cpo!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/2d047967fa0480c265190c91791b6a7e/notes_pre_post/1040g3k031vae0eh11u004b7sf8e1p0ho2vd3cpo!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/d17f5e831fc6065ff1a4b8978670830f/notes_pre_post/1040g3k031vae0eh11u0g4b7sf8e1p0hoi51kajg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202604240017/1d5828a35df64f1e250c8affd06c4e6d/notes_pre_post/1040g3k031vae0eh11u104b7sf8e1p0hoctn6728!nd_dft_wgth_webp_3"
+      ],
+      "tags": [
+        "作文",
+        "作文范文",
+        "中考复习"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "最后两个月中考怎么提分",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:06:34",
+      "content_summary": "南宁一模 总分B#南宁一模[话题]# #中考加油[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea357a000000001f030c06?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnhkNDBr0B3GwcW8UWEn7mEY=&xsec_source=pc_search",
+      "author": "yy",
+      "popularity": 2.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/7f2afe011245d7bded0bb13a369ed7ac/notes_pre_post/1040g3k831vad54e42q805p7lro5h85upohhr6s8!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/7f2afe011245d7bded0bb13a369ed7ac/notes_pre_post/1040g3k831vad54e42q805p7lro5h85upohhr6s8!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "南宁一模",
+        "中考加油"
+      ],
+      "score": null,
+      "score_details": null
+    },
+    {
+      "title": "中考体育800m一直在挑战极限",
+      "source": "xiaohongshu",
+      "publish_time": "2026-04-23T23:22:41",
+      "content_summary": "#体育中考[话题]# #体考[话题]#",
+      "url": "https://www.xiaohongshu.com/explore/69ea39410000000020006003?xsec_token=AB-Kw1pgh4a9ki1JHIdRngnvMdzFRaq0-BBJc8piA3K10=&xsec_source=pc_search",
+      "author": "🥀Roo-sié🐿",
+      "popularity": 4.0,
+      "cover_image": "http://sns-webpic-qc.xhscdn.com/202604240017/4c09f348cc9fe1ef7628de7fed4c38ca/notes_pre_post/1040g3k031vadn20sii605p1gnkal2btridenueg!nd_dft_wlteh_webp_3",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202604240017/4c09f348cc9fe1ef7628de7fed4c38ca/notes_pre_post/1040g3k031vadn20sii605p1gnkal2btridenueg!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "体育中考",
+        "体考"
+      ],
+      "score": null,
+      "score_details": null
+    }
+  ]
+}
