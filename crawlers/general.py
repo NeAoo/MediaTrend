@@ -1,59 +1,41 @@
 """
 通用教育资讯采集器
-用于采集其他教育类网站的热点资讯
+用于采集教育类网站的热点资讯。
 """
+
+import re
+from datetime import datetime
+from typing import List
+from urllib.parse import urljoin
+
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-from typing import List
 from loguru import logger
 
+from config.settings import GENERAL_MAX_LINKS_PER_SITE, GENERAL_NEWS_SITES
 from crawlers.base import BaseCrawler
-from models.hotspot import EducationHotspot, CollectionResult
+from models.hotspot import CollectionResult, EducationHotspot
 
 
 class GeneralEducationCrawler(BaseCrawler):
-    """通用教育资讯采集器"""
+    """通用教育资讯采集器。"""
 
     def __init__(self):
         super().__init__("general")
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        })
-
-        # 教育资讯网站列表
-        self.education_sites = [
+        self.session.headers.update(
             {
-                "name": "中国教育在线",
-                "url": "https://www.eol.cn/",
-                "type": "news"
-            },
-            {
-                "name": "家长帮",
-                "url": "https://www.jzb.com/",
-                "type": "community"
-            },
-            # 可以添加更多教育类网站
-        ]
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            }
+        )
+        self.education_sites = GENERAL_NEWS_SITES
 
-    def collect(self, keywords: List[str], time_range_hours: tuple = (24, 48)) -> CollectionResult:
-        """
-        采集通用教育资讯
-
-        Args:
-            keywords: 教育相关关键词
-            time_range_hours: 时间范围
-
-        Returns:
-            CollectionResult: 采集结果
-        """
+    def collect(self, keywords: List[str], time_range_hours: tuple = (0, 24)) -> CollectionResult:
         result = CollectionResult()
 
         for site in self.education_sites:
             try:
                 logger.info(f"正在采集: {site['name']}")
-
                 items = self._fetch_site_news(site)
 
                 for item in items:
@@ -62,78 +44,79 @@ class GeneralEducationCrawler(BaseCrawler):
                         if self.validate_time_range(
                             hotspot.publish_time,
                             time_range_hours[0],
-                            time_range_hours[1]
-                        ):
-                            # 检查是否包含教育相关关键词
-                            if self._is_education_related(hotspot, keywords):
-                                result.items.append(hotspot)
-                                result.success_count += 1
-                    except Exception as e:
-                        logger.error(f"解析资讯失败: {e}")
+                            time_range_hours[1],
+                        ) and self._is_education_related(hotspot, keywords):
+                            result.items.append(hotspot)
+                            result.success_count += 1
+                    except Exception as exc:
+                        logger.error(f"解析资讯失败: {exc}")
                         result.failed_count += 1
 
-                import time
-                time.sleep(2)
-
-            except Exception as e:
-                logger.error(f"采集 {site['name']} 失败: {e}")
-                result.error_messages.append(str(e))
+            except Exception as exc:
+                logger.error(f"采集 {site['name']} 失败: {exc}")
+                result.error_messages.append(str(exc))
 
         logger.info(f"通用采集完成: 成功{result.success_count}, 失败{result.failed_count}")
         return result
 
     def _fetch_site_news(self, site: dict) -> List[dict]:
-        """
-        从指定网站获取新闻列表
-
-        Returns:
-            List[dict]: 原始新闻数据
-        """
-        # TODO: 根据不同网站结构实现解析逻辑
-        # 这里提供基础框架
-
         try:
             response = self.session.get(site["url"], timeout=10)
-            response.encoding = 'utf-8'
-            soup = BeautifulSoup(response.text, 'html.parser')
+            response.encoding = response.apparent_encoding or response.encoding or "utf-8"
+            soup = BeautifulSoup(response.text, "html.parser")
 
-            # 需要根据具体网站结构调整选择器
             articles = []
-            # 示例：提取文章链接和标题
-            links = soup.find_all('a', href=True)[:20]  # 限制数量
-
+            links = soup.find_all("a", href=True)[:GENERAL_MAX_LINKS_PER_SITE]
             for link in links:
                 title = link.get_text(strip=True)
-                href = link['href']
+                href = link["href"]
+                publish_time = self._extract_publish_time(link, href)
 
-                if title and len(title) > 5:  # 过滤太短的标题
-                    articles.append({
-                        "title": title,
-                        "url": href if href.startswith('http') else site['url'] + href,
-                        "publish_time": datetime.now(),  # 需要实际解析
-                        "summary": "",
-                        "source": site["name"]
-                    })
+                if title and len(title) > 5 and publish_time:
+                    articles.append(
+                        {
+                            "title": title,
+                            "url": urljoin(site["url"], href),
+                            "publish_time": publish_time,
+                            "summary": "",
+                            "source": site["name"],
+                        }
+                    )
 
             return articles
-
-        except Exception as e:
-            logger.error(f"抓取网站 {site['name']} 失败: {e}")
+        except Exception as exc:
+            logger.error(f"抓取网站 {site['name']} 失败: {exc}")
             return []
 
-    def _is_education_related(self, hotspot: EducationHotspot, keywords: List[str]) -> bool:
-        """判断内容是否与教育相关"""
-        text = f"{hotspot.title} {hotspot.content_summary}".lower()
+    def _extract_publish_time(self, link, href: str) -> datetime | None:
+        """从链接文本、周边 HTML 或 URL 中提取发布日期。"""
+        text_parts = [href or "", link.get_text(" ", strip=True)]
+        parent = link.parent
+        if parent:
+            text_parts.append(parent.get_text(" ", strip=True))
+        raw = " ".join(text_parts)
 
-        education_terms = keywords + [
-            "教育", "学校", "学生", "老师", "家长",
-            "学习", "考试", "课程", "培训", "升学"
+        patterns = [
+            r"(20\d{2})[-/年.](\d{1,2})[-/月.](\d{1,2})",
+            r"(20\d{2})(\d{2})(\d{2})",
         ]
+        for pattern in patterns:
+            match = re.search(pattern, raw)
+            if not match:
+                continue
+            year, month, day = [int(part) for part in match.groups()]
+            try:
+                return datetime(year, month, day)
+            except ValueError:
+                continue
+        return None
 
+    def _is_education_related(self, hotspot: EducationHotspot, keywords: List[str]) -> bool:
+        text = f"{hotspot.title} {hotspot.content_summary}".lower()
+        education_terms = keywords + ["教育", "学校", "学生", "老师", "家长", "学习", "考试", "课程", "培训", "升学"]
         return any(term in text for term in education_terms)
 
     def parse_item(self, raw_data: dict) -> EducationHotspot:
-        """解析通用资讯数据"""
         return EducationHotspot(
             title=raw_data.get("title", ""),
             source=raw_data.get("source", "网络"),
@@ -141,5 +124,5 @@ class GeneralEducationCrawler(BaseCrawler):
             publish_time=raw_data.get("publish_time", datetime.now()),
             content_summary=raw_data.get("summary", ""),
             url=raw_data.get("url", ""),
-            tags=["教育", "资讯"]
+            tags=["教育", "资讯"],
         )

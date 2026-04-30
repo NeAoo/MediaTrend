@@ -1,0 +1,144 @@
+﻿# ==================== 核心依赖 ====================
+# HTTP 客户端
+httpx==0.28.1
+requests==2.33.1
+
+# 浏览器自动化
+playwright==1.58.0
+camoufox==0.4.11
+selenium==4.43.0
+
+# ==================== 数据处理 ====================
+# JSON/XML 解析
+beautifulsoup4==4.14.3
+lxml==6.1.0
+parsel==1.9.1
+feedparser==6.0.12
+
+# 数据处理
+pandas==2.2.3
+numpy==2.4.4
+openpyxl>=3.1.2
+
+# ==================== AI/LLM ====================
+openai==2.32.0
+jiter==0.14.0
+
+# ==================== 数据验证与模型 ====================
+pydantic==2.13.3
+pydantic_core==2.46.3
+annotated-types==0.7.0
+
+# ==================== 异步支持 ====================
+anyio==4.13.0
+asyncio
+aiofiles~=23.2.1
+aiomysql==0.2.0
+aiosqlite==0.21.0
+asyncmy>=0.2.10
+
+# 数据库 ORM
+sqlalchemy>=2.0.43
+alembic>=1.16.5
+motor>=3.3.0
+
+# Redis
+redis~=4.6.0
+
+# ==================== Web 框架（TrendCrawlerRuntime API）====================
+fastapi==0.110.2
+uvicorn==0.29.0
+typer>=0.12.3
+
+# ==================== 工具库 ====================
+# 环境变量
+python-dotenv==1.2.2
+
+# 日志
+loguru==0.7.3
+
+# 定时任务
+APScheduler==3.11.2
+
+# 重试机制
+tenacity==9.1.4
+
+# 加密
+cryptography>=45.0.7
+pycryptodome==3.23.0
+
+# JavaScript 执行
+pyexecjs==1.5.1
+
+# 分词与词云
+jieba==0.42.1
+wordcloud==1.9.3
+matplotlib==3.9.0
+
+# 图像处理
+Pillow==12.2.0
+opencv-python
+
+# 其他工具
+orjson==3.11.8
+pyhumps==3.8.0
+click==8.3.2
+tqdm==4.67.3
+PyYAML==6.0.3
+
+# ==================== 平台专用库 ====================
+# 小红书
+xhs==0.2.13
+xhshow==0.1.9
+
+# ==================== 浏览器指纹与反爬 ====================
+apify_fingerprint_datapoints==0.12.0
+browserforge==1.2.4
+language-tags==1.2.0
+screeninfo==0.8.1
+ua-parser==1.0.2
+ua-parser-builtins==202603
+
+# ==================== 网络与代理 ====================
+websocket-client==1.9.0
+wsproto==1.3.2
+PySocks==1.7.1
+webdriver-manager==4.0.2
+
+# ==================== 系统相关 ====================
+platformdirs==4.9.6
+colorama==0.4.6
+win32_setctime==1.2.0
+
+# ==================== 开发测试 ====================
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pipreqs==0.4.13
+
+# ==================== 依赖解析 ====================
+attrs==26.1.0
+certifi==2026.2.25
+cffi==2.0.0
+charset-normalizer==3.4.7
+distro==1.9.0
+docopt==0.6.2
+greenlet==3.4.0
+h11==0.16.0
+httpcore==1.0.9
+idna==3.11
+outcome==1.3.0.post0
+packaging==26.1
+pycparser==3.0
+pyee==13.0.1
+sgmllib3k==1.0.0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+soupsieve==2.8.3
+trio==0.33.0
+trio-websocket==0.12.2
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+tzdata==2026.1
+tzlocal==5.3.1
+urllib3==2.6.3
+yarg==0.1.10
