@@ -88,18 +88,34 @@ source .venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
-playwright install
+playwright install chromium
+```
+
+如果你要启用 `xiaohongshu` 或 `zhihu`，还需要额外安装 `MediaCrawler` 依赖：
+
+```bash
+pip install -r MediaCrawler/requirements.txt
 ```
 
 #### 4. 配置环境变量
 
-参考 `.env.example` 创建 `.env` 文件：
+参考 `.env.example` 创建 `.env` 文件。第一次本地运行建议先保留：
+
+```env
+ENABLED_SOURCES=wechat
+```
+
+完整示例：
 
 ```env
 # 大模型 API 配置
 LLM_API_KEY=your_api_key_here
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-5.4
+
+# 本地第一次运行建议先只开 wechat
+ENABLED_SOURCES=wechat
+SEARCH_KEYWORDS=教育改革,中考
 
 # 输出目录
 OUTPUT_DIR=./output
@@ -115,46 +131,44 @@ ZHIHU_COOKIE=你的知乎Cookie
 > 3. 按 F12 打开开发者工具 → Application → Cookies
 > 4. 复制所有 Cookie 字符串粘贴到 `.env` 文件
 
-#### 5. 配置 Chrome CDP 模式
+#### 5. 配置 Chrome / Playwright
 
-项目默认使用 CDP 模式连接已有 Chrome 浏览器：
+只跑 `wechat` 时，不需要手动开 Chrome CDP。执行过下面命令即可：
 
-1. 打开 Chrome，在地址栏输入：`chrome://inspect/#remote-debugging`
-2. 勾选 **"Allow remote debugging for this browser instance"**
-3. 确认显示：`Server running at: 127.0.0.1:9222`
+```bash
+playwright install chromium
+```
+
+如果你要跑 `MediaCrawler` 的 `xiaohongshu` / `zhihu`，它内部会使用自己的浏览器控制逻辑，第一次登录通常需要扫码。
 
 #### 6. 配置数据源
 
-编辑 `config/settings.py`:
+优先在 `.env` 中配置，不建议直接改 `config/settings.py`。
 
-```python
-# 启用的数据源
-ENABLED_SOURCES = [
-    "zhihu",       # 知乎
-    "wechat",      # 微信公众号
-    # "xiaohongshu", # 小红书
-]
+```env
+# 推荐第一步
+ENABLED_SOURCES=wechat
 
-# 搜索关键词
-KEYWORDS = [
-    "学习方法",
-    "考研",
-    "家庭教育",
-]
-
-# 采集数量
-INITIAL_COLLECT_COUNT = 30  # 初始采集数量
-TOP_N_SELECT_COUNT = 10     # 最终筛选Top N
+# 之后按需开启
+# ENABLED_SOURCES=wechat,xiaohongshu
+# ENABLED_SOURCES=wechat,zhihu
+# ENABLED_SOURCES=wechat,general
 ```
 
 ### 运行方式
 
 #### 方式1: 单次执行
 
-立即执行一次采集任务：
+立即执行一次完整采集 + 打分任务：
 
 ```bash
 python main.py run
+```
+
+如果你还没填 `LLM_API_KEY`，先跑只采集模式：
+
+```bash
+python main.py search
 ```
 
 **执行流程**：

@@ -4,21 +4,28 @@
 1. 搜狗微信搜索（使用 Playwright 浏览器，绕过反爬）
 2. 详情页抓取（获取完整正文和准确时间）
 """
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict
-from loguru import logger
-import time
+import asyncio
+import json
 import random
 import re
-import json
-import asyncio
-import os
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+import requests
+from bs4 import BeautifulSoup
+from loguru import logger
 
 from crawlers.base import BaseCrawler
 from models.hotspot import EducationHotspot, CollectionResult
-from config.settings import TIME_RANGE_MIN, TIME_RANGE_MAX
+from config.settings import (
+    SOGOU_WECHAT_COOKIE,
+    TIME_RANGE_MAX,
+    TIME_RANGE_MIN,
+    WECHAT_FETCH_DETAIL_PAGE,
+    WECHAT_MAX_RESULTS_PER_KEYWORD,
+    WECHAT_USE_PLAYWRIGHT,
+)
 
 
 class WechatCrawler(BaseCrawler):
@@ -37,8 +44,7 @@ class WechatCrawler(BaseCrawler):
             "Connection": "keep-alive",
         })
 
-        # 从环境变量读取 Cookie
-        self.sogou_cookie = os.getenv("SOGOU_WECHAT_COOKIE", "")
+        self.sogou_cookie = SOGOU_WECHAT_COOKIE
         if self.sogou_cookie:
             logger.info("已加载搜狗微信 Cookie")
 
@@ -54,8 +60,8 @@ class WechatCrawler(BaseCrawler):
 
         # 配置选项
         self.config = {
-            "fetch_detail_page": False,  # 暂时关闭详情页（Playwright 详情页也反爬）
-            "use_playwright": True,      # 使用 Playwright 浏览器搜索（绕过反爬）
+            "fetch_detail_page": WECHAT_FETCH_DETAIL_PAGE,
+            "use_playwright": WECHAT_USE_PLAYWRIGHT,
         }
 
     def collect(self, keywords: List[str] = None, time_range_hours: tuple = None) -> CollectionResult:
@@ -87,8 +93,10 @@ class WechatCrawler(BaseCrawler):
             try:
                 logger.info(f"正在搜索公众号关键词: {keyword}")
 
-                # 每个关键词采集8条（固定值，不需要配置）
-                items = self._search_sogou_wechat(keyword, max_results=8)
+                items = self._search_sogou_wechat(
+                    keyword,
+                    max_results=WECHAT_MAX_RESULTS_PER_KEYWORD,
+                )
 
                 if not items:
                     logger.warning(f"关键词 '{keyword}' 未获取到数据")
@@ -205,7 +213,7 @@ class WechatCrawler(BaseCrawler):
                     "source": "wechat",
                     "crawl_time": datetime.now().isoformat(),
                     "keywords": keyword_list,
-                    "time_range_hours": [0, 168],
+                    "time_range_hours": [TIME_RANGE_MIN, TIME_RANGE_MAX],
                     "total_count": len(items)
                 },
                 "data": raw_data
@@ -232,13 +240,15 @@ class WechatCrawler(BaseCrawler):
             List[dict]: 文章数据列表
         """
         try:
-            # 根据配置选择搜索方式
             if self.config.get("use_playwright", False):
                 logger.info(f"使用 Playwright 浏览器搜索：{keyword}")
-                return self._search_with_playwright(keyword, max_results)
-            else:
-                logger.info(f"使用 requests 搜索：{keyword}")
-                return self._search_with_requests(keyword, max_results)
+                articles = self._search_with_playwright(keyword, max_results)
+                if articles:
+                    return articles
+                logger.warning("Playwright 未返回结果，回退到 requests 搜索")
+
+            logger.info(f"使用 requests 搜索：{keyword}")
+            return self._search_with_requests(keyword, max_results)
         except Exception as e:
             logger.error(f"搜索失败：{e}", exc_info=True)
             return []

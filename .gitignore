@@ -46,9 +46,19 @@ nul
 *.html
 .DS_Store
 
+# 运行时输出
+merged_data/*
+!merged_data/.gitkeep
+raw_data/*
+!raw_data/.gitkeep
+raw_data/wechat/*
+scored_data/*
+!scored_data/.gitkeep
+output/*
+!output/.gitkeep
+
 # MediaCrawler 运行时数据
 MediaCrawler/browser_data/
 MediaCrawler/data/
 MediaCrawler/*.db
-
 
