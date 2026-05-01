@@ -18,7 +18,7 @@
       "title": "",
       "source": "",
       "publish_time": "",
-      "content_summary": "",
+      "content": "",
       "url": "",
       "author": "",
       "popularity": "",
@@ -107,7 +107,7 @@ class DataMerger:
                 "title": hotspot.title,
                 "source": hotspot.source,
                 "publish_time": hotspot.publish_time.isoformat(),
-                "content_summary": hotspot.content_summary,
+                "content": hotspot.content,
                 "url": hotspot.url,
 
                 # 可选字段
@@ -129,7 +129,7 @@ class DataMerger:
 
         logger.info(f"✅ 数据合并完成")
         logger.info(f"📄 合并文件: {merged_file}")
-        logger.info(f"📋 包含字段: title, source, author, publish_time, content_summary, url, popularity, cover_image, image_list, tags, score, score_details")
+        logger.info(f"📋 包含字段: title, source, author, publish_time, content, url, popularity, cover_image, image_list, tags, score, score_details")
         logger.info("=" * 60)
 
         return str(merged_file)
@@ -173,7 +173,7 @@ class DataMerger:
                     title=item["title"],
                     source=item["source"],
                     publish_time=publish_time,
-                    content_summary=item["content_summary"],
+                    content=item.get("content", ""),
                     url=item["url"],
 
                     # 可选字段
@@ -211,7 +211,7 @@ class DataMerger:
             "title",
             "source",
             "publish_time",
-            "content_summary",
+            "content",
             "url"
         ]
 

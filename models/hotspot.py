@@ -1,9 +1,11 @@
 """
 教育热点数据模型
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
+
+CONTENT_MAX_LENGTH = 3000
 
 
 class EducationHotspot(BaseModel):
@@ -12,7 +14,7 @@ class EducationHotspot(BaseModel):
     title: str = Field(..., description="标题")
     source: str = Field(..., description="来源平台")
     publish_time: datetime = Field(..., description="发布时间")
-    content_summary: str = Field(..., description="内容摘要")
+    content: str = Field("", description="完整正文，最多3000字")
     url: str = Field(..., description="原文链接")
 
     author: Optional[str] = Field(None, description="作者/发布者")
@@ -29,6 +31,13 @@ class EducationHotspot(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def truncate_content(cls, value) -> str:
+        if value is None:
+            return ""
+        return str(value)[:CONTENT_MAX_LENGTH]
 
 
 class CollectionResult(BaseModel):

@@ -37,6 +37,7 @@ venv.bak/
 # 日志和数据（运行时生成）
 logs/
 *.log
+browser_data/
 
 # 环境变量（包含敏感信息）
 .env
@@ -61,4 +62,3 @@ output/*
 TrendCrawlerRuntime/browser_data/
 TrendCrawlerRuntime/data/
 TrendCrawlerRuntime/*.db
-
