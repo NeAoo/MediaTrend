@@ -17,7 +17,7 @@ import json
 import argparse
 
 from config.settings import OUTPUT_DIR
-from models.hotspot import EducationHotspot
+from models.hotspot import CONTENT_MAX_LENGTH, EducationHotspot
 
 
 class MarkdownGenerator:
@@ -154,11 +154,11 @@ class MarkdownGenerator:
 1. **🔥 热度 (20%)**: 内容的关注度和传播度
 2. **👑 权威性 (25%)**: 信息来源的可靠性和专业性
 3. **📚 内容质量 (25%)**: 信息的完整性、准确性和深度
-4. **💡 家长实用性 (20%)**: 对家长群体的实用价值和参考意义
+4. **💡 大众共鸣 (16%)**: 普通读者是否有讨论、转发、评论或共情的理由
 5. **⏰ 信息时效性 (10%)**: 内容的新鲜程度和及时性
 
 ### 综合评分公式
-综合评分 = 热度×0.2 + 权威性×0.25 + 内容质量×0.25 + 家长实用性×0.2 + 时效性×0.1
+综合评分 = 热度×0.30 + 时效性×0.20 + 大众共鸣×0.16 + 内容质量×0.14 + 权威性×0.10 + 教育/家庭相关性×0.05 + 风险控制×0.05
 
 ### 使用说明
 - 评分越高表示内容价值越大
@@ -186,7 +186,7 @@ class MarkdownGenerator:
         author = item.get('author', '未知作者')
         source = item.get('source', '未知来源')
         publish_time_str = item.get('publish_time', '')
-        content_summary = item.get('content_summary', '')
+        article_content = item.get('content', '')
         url = item.get('url', '')
         popularity = item.get('popularity', 0)
         cover_image = item.get('cover_image', '')
@@ -222,25 +222,26 @@ class MarkdownGenerator:
             heat = score_details.get('heat', 0)
             authority = score_details.get('authority', 0)
             quality = score_details.get('quality', 0)
-            practicality = score_details.get('practicality', 0)
+            resonance = score_details.get('resonance', score_details.get('practicality', 0))
             timeliness = score_details.get('timeliness', 0)
+            education_family_relevance = score_details.get('education_family_relevance', score_details.get('account_fit', 0))
+            risk_control = score_details.get('risk_control', 0)
 
             content += f"""**📈 评分详情**:
 - 🔥 热度: {heat:.1f}/10
 - 👑 权威性: {authority:.1f}/10
 - 📚 内容质量: {quality:.1f}/10
-- 💡 实用性: {practicality:.1f}/10
+- 💡 大众共鸣: {resonance:.1f}/10
 - ⏰ 时效性: {timeliness:.1f}/10
+- 👪 教育/家庭相关性: {education_family_relevance:.1f}/10
+- 🛡️ 风险控制: {risk_control:.1f}/10
 
 """
 
-        # 添加摘要
-        if content_summary:
-            # 限制摘要长度
-            summary = content_summary[:500]
-            if len(content_summary) > 500:
-                summary += '...'
-            content += f"**📝 内容摘要**:\n\n{summary}\n\n"
+        # 添加正文
+        if article_content:
+            article_content = article_content[:CONTENT_MAX_LENGTH]
+            content += f"**📝 内容**:\n\n{article_content}\n\n"
 
         # 添加标签
         if tags:
@@ -525,7 +526,7 @@ class MarkdownGenerator:
 
 本报告数据来源于微信公众号、小红书、教育资讯网站等多个渠道，经AI智能评分筛选后生成。
 
-**评分维度**: 热度、权威性、内容质量、家长实用性、信息时效性
+**评分维度**: 热度、时效性、大众共鸣、内容质量、权威性、教育/家庭相关性、风险控制
 
 ---
 
@@ -577,9 +578,9 @@ class MarkdownGenerator:
             # 如果没有image_list但有cover_image，则显示封面图
             content += f"**🖼️ 封面预览**:\n\n![封面图]({hotspot.cover_image})\n\n"
 
-        content += f"""**📝 内容摘要**:
+        content += f"""**📝 内容**:
 
-{hotspot.content_summary}
+{hotspot.content}
 
 **💬 推荐理由**:
 
@@ -589,8 +590,10 @@ class MarkdownGenerator:
 - 热度: {self._get_score_detail(hotspot, 'heat'):.1f}
 - 权威性: {self._get_score_detail(hotspot, 'authority'):.1f}
 - 内容质量: {self._get_score_detail(hotspot, 'quality'):.1f}
-- 家长实用性: {self._get_score_detail(hotspot, 'practicality'):.1f}
+- 大众共鸣: {self._get_score_detail(hotspot, 'resonance'):.1f}
 - 时效性: {self._get_score_detail(hotspot, 'timeliness'):.1f}
+- 教育/家庭相关性: {self._get_score_detail(hotspot, 'education_family_relevance'):.1f}
+- 风险控制: {self._get_score_detail(hotspot, 'risk_control'):.1f}
 
 [🔗 查看原文]({hotspot.url})
 
@@ -632,14 +635,21 @@ class MarkdownGenerator:
     def _get_score_detail(self, hotspot: EducationHotspot, dimension: str) -> float:
         """获取评分细节"""
         if hotspot.score_details and isinstance(hotspot.score_details, dict):
-            return hotspot.score_details.get(dimension, 5.0)
+            fallback_keys = {
+                "resonance": "practicality",
+                "education_family_relevance": "account_fit",
+            }
+            return hotspot.score_details.get(
+                dimension,
+                hotspot.score_details.get(fallback_keys.get(dimension, ""), 5.0),
+            )
         return 5.0
 
     def _count_by_category(self, hotspots: List[EducationHotspot], keyword: str) -> int:
         """统计某类别的数量"""
         count = 0
         for hotspot in hotspots:
-            if keyword in hotspot.title or keyword in hotspot.content_summary:
+            if keyword in hotspot.title or keyword in hotspot.content:
                 count += 1
         return count
 

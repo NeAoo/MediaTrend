@@ -100,7 +100,7 @@ class DemoEducationCrawler(BaseCrawler):
                             source="教育资讯",
                             author=entry.get('author'),
                             publish_time=publish_time,
-                            content_summary=summary[:200] if summary else title,
+                            content=summary if summary else title,
                             url=entry.get('link', ''),
                             tags=["教育", "RSS"]
                         )
@@ -171,7 +171,7 @@ class DemoEducationCrawler(BaseCrawler):
                 source=source,
                 author=None,
                 publish_time=publish_time,
-                content_summary=f"【{title}】这是关于教育领域的最新热点资讯，涉及政策变化、教育改革、家庭教育等重要内容，值得家长关注。详细内容请点击原文链接查看完整报道。",
+                content=f"【{title}】这是关于教育领域的最新热点资讯，涉及政策变化、教育改革、家庭教育等重要内容，值得家长关注。详细内容请点击原文链接查看完整报道。",
                 url=f"https://example.com/education/news/{i+1}",
                 popularity=random.randint(100, 10000),
                 tags=["教育", "热点", "家长必读"]

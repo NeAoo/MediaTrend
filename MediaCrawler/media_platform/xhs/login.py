@@ -102,11 +102,7 @@ class XiaoHongShuLogin(AbstractLogin):
         await asyncio.sleep(1)
         try:
             # After entering Xiaohongshu homepage, the login dialog may not pop up automatically, need to manually click login button
-            login_button_ele = await self.context_page.wait_for_selector(
-                selector="xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button",
-                timeout=5000
-            )
-            await login_button_ele.click()
+            await self._click_login_button()
             # The login dialog has two forms: one shows phone number and verification code directly
             # The other requires clicking to switch to phone login
             element = await self.context_page.wait_for_selector(
@@ -167,23 +163,16 @@ class XiaoHongShuLogin(AbstractLogin):
     async def login_by_qrcode(self):
         """login xiaohongshu website and keep webdriver login state"""
         utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] Begin login xiaohongshu by qrcode ...")
-        # login_selector = "div.login-container > div.left > div.qrcode > img"
-        qrcode_img_selector = "xpath=//img[@class='qrcode-img']"
         # find login qrcode
-        base64_qrcode_img = await utils.find_login_qrcode(
-            self.context_page,
-            selector=qrcode_img_selector
-        )
+        base64_qrcode_img = await self._find_login_qrcode()
         if not base64_qrcode_img:
             utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
             # if this website does not automatically popup login dialog box, we will manual click login button
             await asyncio.sleep(0.5)
-            login_button_ele = self.context_page.locator("xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button")
-            await login_button_ele.click()
-            base64_qrcode_img = await utils.find_login_qrcode(
-                self.context_page,
-                selector=qrcode_img_selector
-            )
+            if not await self._click_login_button():
+                utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] login button not found, please check page layout.")
+                sys.exit()
+            base64_qrcode_img = await self._find_login_qrcode()
             if not base64_qrcode_img:
                 sys.exit()
 
@@ -209,6 +198,45 @@ class XiaoHongShuLogin(AbstractLogin):
         wait_redirect_seconds = 5
         utils.logger.info(f"[XiaoHongShuLogin.login_by_qrcode] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
+
+    async def _find_login_qrcode(self) -> str:
+        qrcode_selectors = [
+            "xpath=//img[contains(@class, 'qrcode')]",
+            "xpath=//div[contains(@class, 'qrcode')]//img",
+            "xpath=//img[contains(@src, 'qrcode') or contains(@src, 'qr')]",
+        ]
+        for selector in qrcode_selectors:
+            base64_qrcode_img = await utils.find_login_qrcode(self.context_page, selector=selector, timeout=4000)
+            if base64_qrcode_img:
+                return base64_qrcode_img
+        return ""
+
+    async def _click_login_button(self) -> bool:
+        candidates = [
+            "xpath=//button[normalize-space()='登录']",
+            "xpath=//*[self::button or self::span or self::div][normalize-space()='登录']",
+            "xpath=//*[self::button or self::span or self::div][contains(normalize-space(), '登录')]",
+        ]
+        for selector in candidates:
+            locator = self.context_page.locator(selector).first
+            try:
+                if await locator.is_visible(timeout=1500):
+                    await locator.click(timeout=3000)
+                    await asyncio.sleep(1)
+                    return True
+            except Exception:
+                continue
+
+        try:
+            login_text = self.context_page.get_by_text("登录", exact=True).first
+            if await login_text.is_visible(timeout=1500):
+                await login_text.click(timeout=3000)
+                await asyncio.sleep(1)
+                return True
+        except Exception:
+            pass
+
+        return False
 
     async def login_by_cookies(self):
         """login xiaohongshu website by cookies"""

@@ -31,11 +31,9 @@ XHS_INTERNATIONAL = False
 # 优先从环境变量读取，支持外部配置
 _keywords_env = os.getenv("MEDIA_CRAWLER_KEYWORDS", "")
 if _keywords_env:
-    KEYWORDS = [k.strip() for k in _keywords_env.split(",") if k.strip()]
+    KEYWORDS = ",".join(k.strip() for k in _keywords_env.split(",") if k.strip())
 else:
-    KEYWORDS = [
-        "教育",
-    ]
+    KEYWORDS = "教育"
 
 # 登录类型，可选值：qrcode（二维码登录）| phone（手机号登录）| cookie（使用已有cookie）
 LOGIN_TYPE = "qrcode"

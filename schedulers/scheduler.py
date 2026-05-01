@@ -17,7 +17,6 @@ from formatters.markdown import MarkdownGenerator
 from config.settings import (
     INITIAL_COLLECT_COUNT,
     TOP_N_SELECT_COUNT,
-    KEYWORDS,
     SCHEDULE_TIME,
     LOG_FILE
 )
