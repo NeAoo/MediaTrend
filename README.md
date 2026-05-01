@@ -111,11 +111,26 @@ ENABLED_SOURCES=wechat
 # 大模型 API 配置
 LLM_API_KEY=your_api_key_here
 LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL=gpt-5.4
+LLM_MODEL=gpt-5.5
 
 # 本地第一次运行建议先只开 wechat
 ENABLED_SOURCES=wechat
-SEARCH_KEYWORDS=教育改革,中考
+WECHAT_SEARCH_KEYWORDS=教育改革,中考
+WECHAT_MAX_RESULTS_PER_KEYWORD=8
+WECHAT_MP_ACCOUNTS=中国教育报,人民教育
+WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT=10
+WECHAT_MP_LOOKBACK_DAYS=7
+WECHAT_MP_HEADLESS=false
+WECHAT_MP_SLOW_MO_MS=300
+WECHAT_MP_ACTION_DELAY_SECONDS=1.5
+WECHAT_MP_ARTICLE_DELAY_SECONDS=3
+WECHAT_MP_PAGE_DELAY_SECONDS=4
+WECHAT_MP_ACCOUNT_DELAY_SECONDS=8
+WECHAT_MP_RAW_OUTPUT_DIR=./raw_data/wechat_mp
+XIAOHONGSHU_SEARCH_KEYWORDS=教育改革,中考
+XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD=20
+ZHIHU_SEARCH_KEYWORDS=教育改革,中考
+ZHIHU_MAX_RESULTS_PER_KEYWORD=20
 
 # 输出目录
 OUTPUT_DIR=./output
@@ -151,6 +166,7 @@ ENABLED_SOURCES=wechat
 
 # 之后按需开启
 # ENABLED_SOURCES=wechat,xiaohongshu
+# ENABLED_SOURCES=wechat,wechat_mp
 # ENABLED_SOURCES=wechat,zhihu
 # ENABLED_SOURCES=wechat,general
 ```
@@ -171,11 +187,37 @@ python main.py run
 python main.py search
 ```
 
+只跑指定来源：
+
+```bash
+python main.py search --sources wechat
+python main.py search --sources wechat_mp
+python main.py search --sources wechat,xiaohongshu,zhihu
+python main.py search --sources all
+```
+
+临时覆盖本次运行关键词：
+
+```bash
+python main.py search --sources wechat --keywords 中考,高考
+```
+
+单源调试脚本：
+
+```bash
+python scripts/search_wechat.py
+python scripts/search_wechat_mp.py --accounts 中国教育报,人民教育
+python scripts/search_xiaohongshu.py
+python scripts/search_zhihu.py
+```
+
+`wechat_mp` 是微信公众平台后台采集，按 `WECHAT_MP_ACCOUNTS` 中的固定公众号名称抓最近文章。首次运行会打开浏览器，需要你扫码登录公众号后台；登录态默认保存到 `./browser_data/wechat_mp_state.json`。
+
 **执行流程**：
 1. 从多个平台采集教育热点内容
 2. 合并多源数据为统一JSON文件
 3. 使用AI对内容进行智能评分
-4. 筛选前N条高分内容
+4. 筛选至少前N条高分内容；若第N名后续文章同分，则并列保留
 5. 生成Markdown日报
 
 **输出示例**：
@@ -192,12 +234,12 @@ python main.py search
 ✅ 数据合并完成
 
 第三步：开始对内容进行智能打分...
-已完成第 1 批打分
+开始单篇独立打分，并发线程数: 5
 
 第四步：保存打分后的数据到 scored_data...
 ✅ 打分数据已保存
 
-第五步：筛选前 10 条高分内容...
+第五步：筛选至少前 10 条高分内容，同分并列保留...
 筛选完成，最终选取 10 条优质内容
 
 第六步：生成 Markdown 日报...
@@ -278,10 +320,26 @@ tail -f logs/agent.log
 |--------|------|--------|
 | `INITIAL_COLLECT_COUNT` | 初始采集数量 | 30 |
 | `TOP_N_SELECT_COUNT` | 最终筛选Top N | 10 |
-| `KEYWORDS` | 搜索关键词列表 | `["学习方法", "考研"]` |
+| `WECHAT_SEARCH_KEYWORDS` | 搜狗公众号关键词搜索词 | 空 |
+| `WECHAT_MAX_RESULTS_PER_KEYWORD` | 公众号每个关键词最多解析条数 | 8 |
+| `WECHAT_MP_ACCOUNTS` | 微信公众平台后台固定公众号列表 | 空 |
+| `WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT` | 后台模式每个公众号最多采集篇数 | 10 |
+| `WECHAT_MP_LOOKBACK_DAYS` | 后台模式采集最近几天文章 | 7 |
+| `WECHAT_MP_HEADLESS` | 后台模式是否无头运行；重新扫码时改为 `false` | `false` |
+| `WECHAT_MP_SLOW_MO_MS` | Playwright 每个动作额外放慢毫秒数 | 300 |
+| `WECHAT_MP_ACTION_DELAY_SECONDS` | 普通点击/输入后的等待秒数 | 1.5 |
+| `WECHAT_MP_ARTICLE_DELAY_SECONDS` | 每解析一篇文章后的等待秒数 | 3 |
+| `WECHAT_MP_PAGE_DELAY_SECONDS` | 翻页和搜索结果加载后的等待秒数 | 4 |
+| `WECHAT_MP_ACCOUNT_DELAY_SECONDS` | 切换到下一个公众号前的等待秒数 | 8 |
+| `WECHAT_MP_RAW_OUTPUT_DIR` | 后台模式按日期/公众号保存原始数据的目录 | `./raw_data/wechat_mp` |
+| `WECHAT_MP_STORAGE_STATE` | 后台模式登录态保存路径 | `./browser_data/wechat_mp_state.json` |
+| `XIAOHONGSHU_SEARCH_KEYWORDS` | 小红书搜索关键词 | 空 |
+| `XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD` | 小红书每个关键词最多采集条数 | 20 |
+| `ZHIHU_SEARCH_KEYWORDS` | 知乎搜索关键词 | 空 |
+| `ZHIHU_MAX_RESULTS_PER_KEYWORD` | 知乎每个关键词最多采集条数 | 20 |
 | `TIME_RANGE_MIN` | 最小时间范围(小时) | 0 |
 | `TIME_RANGE_MAX` | 最大时间范围(小时) | 24 |
-| `ENABLED_SOURCES` | 启用的数据源 | `["zhihu"]` |
+| `ENABLED_SOURCES` | 默认启用的数据源 | `wechat` |
 | `SCHEDULE_TIME` | 定时执行时间 | `"08:00"` |
 | `LOG_LEVEL` | 日志级别 | `"INFO"` |
 | `LOG_FILE` | 日志文件路径 | `"./logs/agent.log"` |
@@ -307,13 +365,14 @@ tail -f logs/agent.log
 
 ### AI 打分机制
 
-系统使用 OpenAI 兼容的 API 格式，批量对内容进行智能评分。
+系统使用 OpenAI 兼容的 API 格式，对每篇内容进行独立智能评分。
 
 **评分流程**：
-1. 将采集的内容按批次（每批5条）发送给大模型
-2. 大模型根据5个维度进行评分并返回JSON格式结果
-3. 系统解析评分结果并赋值给对应的热点对象
-4. 失败批次自动重试并赋予默认分数（5.0分）
+1. 每篇文章单独发送给大模型，正文最多保留 3000 字
+2. 默认用 `SCORE_WORKERS=5` 并发评分，可在 `.env` 调整
+3. 大模型根据5个维度进行评分并返回JSON格式结果
+4. 系统解析评分结果并赋值给对应的热点对象
+5. 单篇失败时只影响这一篇，并赋予默认分数（5.0分）
 
 **综合评分计算公式**：
 ```

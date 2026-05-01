@@ -199,7 +199,7 @@ class WechatCrawler(BaseCrawler):
                     "source": item.source,
                     "author": item.author,
                     "publish_time": item.publish_time.isoformat(),
-                    "content_summary": item.content_summary,
+                    "content": item.content,
                     "url": item.url,
                     "popularity": item.popularity,
                     "tags": item.tags,
@@ -479,19 +479,23 @@ class WechatCrawler(BaseCrawler):
 
             # 提取摘要（优先从详情页获取）
             summary = ""
+            content = ""
 
             # 尝试从详情页获取完整内容
             if url and self.config.get("fetch_detail_page", False):
                 detail_content = self._fetch_article_detail_content(url)
                 if detail_content:
-                    summary = detail_content[:800]  # 取前800字作为摘要
-                    logger.debug(f"从详情页获取摘要: {len(summary)}字")
+                    content = detail_content
+                    summary = detail_content[:800]
+                    logger.debug(f"从详情页获取正文: {len(content)}字")
 
             # 如果详情页获取失败，使用搜索结果摘要
             if not summary:
                 summary_tag = item.find('p', class_='txt-info') or item.find('p')
                 summary = summary_tag.get_text(strip=True) if summary_tag else ""
                 logger.debug(f"使用搜索结果摘要: {len(summary)}字")
+            if not content:
+                content = summary
 
             # 提取发布时间
             publish_time = self._extract_publish_time(item)
@@ -509,7 +513,8 @@ class WechatCrawler(BaseCrawler):
             return {
                 "title": title[:200],
                 "url": url,
-                "summary": summary[:800] if summary else title,  # 增加到800字
+                "summary": summary[:800] if summary else title,  # 摘要保留短文本
+                "content": content,
                 "publish_time": publish_time,
                 "author": account_name,
                 "read_count": read_count,
@@ -747,20 +752,15 @@ class WechatCrawler(BaseCrawler):
         if raw_data.get("source_keyword"):
             tags.append(raw_data["source_keyword"])
 
-        # 获取摘要（支持更长的内容）
         summary = raw_data.get("summary", "")
-        if len(summary) > 500:
-            # 如果摘要超过500字，截取并添加省略号
-            content_summary = summary[:500] + "..."
-        else:
-            content_summary = summary
+        content = raw_data.get("content") or summary
 
         return EducationHotspot(
             title=raw_data.get("title", ""),
             source="微信公众号",
             author=raw_data.get("author"),
             publish_time=raw_data.get("publish_time", datetime.now()),
-            content_summary=content_summary,
+            content=content,
             url=raw_data.get("url", ""),
             popularity=popularity,
             tags=tags
@@ -880,7 +880,7 @@ class WechatCrawler(BaseCrawler):
                 
                 if len(clean_text) > 100:
                     logger.debug(f"✓ 成功提取正文：{len(clean_text)}字")
-                    return clean_text[:800]  # 取前 800 字
+                    return clean_text
             
             # 方法2: 查找所有段落
             paragraphs = soup.find_all('p')
