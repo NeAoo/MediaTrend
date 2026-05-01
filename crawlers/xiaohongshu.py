@@ -13,14 +13,13 @@ from typing import List, Optional
 from loguru import logger
 
 from config.settings import (
-    KEYWORDS,
     MEDIA_CRAWLER_DIR,
     MEDIA_CRAWLER_LOGIN_TYPE,
-    MEDIA_CRAWLER_MAX_NOTES_COUNT,
     MEDIA_CRAWLER_PYTHON_BIN,
     MEDIA_CRAWLER_TIMEOUT_SECONDS,
     XIAOHONGSHU_COOKIE,
     XIAOHONGSHU_LOGIN_TYPE,
+    XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD,
 )
 from crawlers.base import BaseCrawler
 from models.hotspot import CollectionResult, EducationHotspot
@@ -35,8 +34,9 @@ class XiaohongshuCrawler(BaseCrawler):
         self.python_bin = MEDIA_CRAWLER_PYTHON_BIN
 
     def collect(self, keywords: List[str] | None = None, time_range_hours: tuple = (0, 48)) -> CollectionResult:
-        if keywords is None:
-            keywords = KEYWORDS
+        if not keywords:
+            logger.warning("未配置小红书搜索关键词，无法采集")
+            return CollectionResult()
 
         max_hours = time_range_hours[1] if isinstance(time_range_hours, tuple) else time_range_hours
         result = CollectionResult()
@@ -82,7 +82,7 @@ class XiaohongshuCrawler(BaseCrawler):
                 source="xiaohongshu",
                 author=raw_data.get("nickname", "未知作者"),
                 publish_time=publish_time,
-                content_summary=raw_data.get("desc", "")[:500],
+                content=raw_data.get("desc", ""),
                 url=raw_data.get("note_url", ""),
                 popularity=float(raw_data.get("liked_count", 0) or 0),
                 cover_image=self._extract_first_image(raw_data.get("image_list", "")),
@@ -96,7 +96,7 @@ class XiaohongshuCrawler(BaseCrawler):
                 source="xiaohongshu",
                 author=raw_data.get("nickname", "未知作者"),
                 publish_time=datetime.now(),
-                content_summary=raw_data.get("desc", "")[:300],
+                content=raw_data.get("desc", ""),
                 url=raw_data.get("note_url", ""),
                 popularity=float(raw_data.get("liked_count", 0) or 0),
                 tags=[],
@@ -144,7 +144,7 @@ class XiaohongshuCrawler(BaseCrawler):
             keywords_str = ",".join(keywords)
             env["MEDIA_CRAWLER_KEYWORDS"] = keywords_str
             env["MEDIA_CRAWLER_TIME_RANGE_MAX"] = str(time_range_hours)
-            env["MEDIA_CRAWLER_MAX_NOTES_COUNT"] = str(MEDIA_CRAWLER_MAX_NOTES_COUNT)
+            env["MEDIA_CRAWLER_MAX_NOTES_COUNT"] = str(XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD)
 
             cmd = [
                 self.python_bin,
@@ -161,7 +161,7 @@ class XiaohongshuCrawler(BaseCrawler):
 
             logger.info(f"传递给 MediaCrawler 的关键词: {keywords_str}")
             logger.info(f"时间范围: {time_range_hours} 小时")
-            logger.info(f"每个关键词爬取数量: {MEDIA_CRAWLER_MAX_NOTES_COUNT}")
+            logger.info(f"每个关键词爬取数量: {XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD}")
             logger.info(f"执行 MediaCrawler: {' '.join(cmd)}")
 
             completed = subprocess.run(

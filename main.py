@@ -9,14 +9,14 @@ from pathlib import Path
 from loguru import logger
 
 from config.settings import (
-    KEYWORDS,
+    ENABLED_SOURCES,
     LLM_API_KEY,
     LOG_FILE,
     LOG_LEVEL,
     SCHEDULE_TIME,
     TOP_N_SELECT_COUNT,
 )
-from crawlers.manager import CrawlerManager
+from crawlers.manager import AVAILABLE_SOURCES, CrawlerManager
 from formatters.markdown import MarkdownGenerator
 from merger.data_merger import DataMerger
 from scorers.scorer import ContentScorer
@@ -47,7 +47,48 @@ def setup_logger() -> None:
     )
 
 
-def run_collection_task() -> bool:
+def _split_csv(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+def parse_sources_arg(raw_sources: str | None) -> list[str]:
+    """Parse CLI source list while preserving execution order."""
+    if not raw_sources:
+        return ENABLED_SOURCES
+
+    sources = _split_csv(raw_sources)
+    if len(sources) == 1 and sources[0].lower() == "all":
+        return [source for source in AVAILABLE_SOURCES if source != "demo"]
+
+    invalid_sources = [source for source in sources if source not in AVAILABLE_SOURCES]
+    if invalid_sources:
+        raise ValueError(
+            "未知搜索源: "
+            f"{', '.join(invalid_sources)}；可选值: {', '.join(AVAILABLE_SOURCES)}"
+        )
+    return sources
+
+
+def parse_keywords_arg(raw_keywords: str | None) -> list[str] | None:
+    keywords = _split_csv(raw_keywords)
+    return keywords or None
+
+
+def _source_keywords_override(
+    sources: list[str],
+    keyword_override: list[str] | None,
+) -> dict[str, list[str]] | None:
+    if keyword_override is None:
+        return None
+    return {source: keyword_override for source in sources}
+
+
+def run_collection_task(
+    sources: list[str] | None = None,
+    keyword_override: list[str] | None = None,
+) -> bool:
     """执行一次完整的采集、打分和报告生成。"""
     logger.info("=" * 60)
     logger.info("教育热点搜集 Agent 启动")
@@ -59,10 +100,14 @@ def run_collection_task() -> bool:
         return False
 
     try:
+        selected_sources = sources or ENABLED_SOURCES
+        source_keywords = _source_keywords_override(selected_sources, keyword_override)
         logger.info("\n第一步：开始采集教育热点...")
-        crawler_manager = CrawlerManager()
-        logger.info(f"搜索关键词: {', '.join(KEYWORDS)}")
-        hotspots = crawler_manager.collect_all(KEYWORDS)
+        logger.info(f"启用搜索源: {', '.join(selected_sources)}")
+        if keyword_override:
+            logger.info(f"命令行覆盖关键词: {', '.join(keyword_override)}")
+        crawler_manager = CrawlerManager(enabled_sources=selected_sources)
+        hotspots = crawler_manager.collect_all(source_keywords=source_keywords)
         logger.info(f"采集完成，共获取 {len(hotspots)} 条热点内容")
 
         if not hotspots:
@@ -75,9 +120,8 @@ def run_collection_task() -> bool:
 
         logger.info("\n第二步：合并多源数据为统一 JSON 文件...")
         merger = DataMerger()
-        from config.settings import ENABLED_SOURCES
 
-        merged_file = merger.merge_sources(hotspots, source_names=ENABLED_SOURCES)
+        merged_file = merger.merge_sources(hotspots, source_names=selected_sources)
         if not merged_file:
             logger.error("数据合并失败")
             return False
@@ -96,14 +140,14 @@ def run_collection_task() -> bool:
         scored_merger = DataMerger(output_dir="./scored_data")
         scored_file = scored_merger.merge_sources(
             scored_hotspots,
-            source_names=ENABLED_SOURCES,
+            source_names=selected_sources,
         )
         if scored_file:
             logger.info(f"打分数据已保存: {scored_file}")
         else:
             logger.warning("打分数据保存失败")
 
-        logger.info(f"\n第五步：筛选前 {TOP_N_SELECT_COUNT} 条高分内容...")
+        logger.info(f"\n第五步：筛选至少前 {TOP_N_SELECT_COUNT} 条高分内容，同分并列保留...")
         top_hotspots = scorer.select_top_n(scored_hotspots, TOP_N_SELECT_COUNT)
         logger.info(f"筛选完成，最终选取 {len(top_hotspots)} 条优质内容")
 
@@ -133,16 +177,23 @@ def run_collection_task() -> bool:
         return False
 
 
-def run_search_task() -> bool:
+def run_search_task(
+    sources: list[str] | None = None,
+    keyword_override: list[str] | None = None,
+) -> bool:
     """只执行搜索采集和合并输出，不做打分。"""
     logger.info("=" * 60)
     logger.info("教育热点搜索任务启动")
     logger.info("=" * 60)
 
     try:
-        crawler_manager = CrawlerManager()
-        logger.info(f"搜索关键词: {', '.join(KEYWORDS)}")
-        hotspots = crawler_manager.collect_all(KEYWORDS)
+        selected_sources = sources or ENABLED_SOURCES
+        source_keywords = _source_keywords_override(selected_sources, keyword_override)
+        logger.info(f"启用搜索源: {', '.join(selected_sources)}")
+        if keyword_override:
+            logger.info(f"命令行覆盖关键词: {', '.join(keyword_override)}")
+        crawler_manager = CrawlerManager(enabled_sources=selected_sources)
+        hotspots = crawler_manager.collect_all(source_keywords=source_keywords)
         logger.info(f"搜索完成，共获取 {len(hotspots)} 条热点内容")
 
         if not hotspots:
@@ -156,11 +207,8 @@ def run_search_task() -> bool:
                 f"{hotspot.publish_time:%Y-%m-%d %H:%M} | "
                 f"{hotspot.title[:60]}"
             )
-
-        from config.settings import ENABLED_SOURCES
-
         merger = DataMerger()
-        merged_file = merger.merge_sources(hotspots, source_names=ENABLED_SOURCES)
+        merged_file = merger.merge_sources(hotspots, source_names=selected_sources)
         if not merged_file:
             logger.error("搜索结果保存失败")
             return False
@@ -177,7 +225,10 @@ def run_search_task() -> bool:
         return False
 
 
-def start_scheduler() -> None:
+def start_scheduler(
+    sources: list[str] | None = None,
+    keyword_override: list[str] | None = None,
+) -> None:
     """启动定时任务调度器。"""
     from apscheduler.schedulers.blocking import BlockingScheduler
     from apscheduler.triggers.cron import CronTrigger
@@ -194,6 +245,10 @@ def start_scheduler() -> None:
     scheduler = BlockingScheduler()
     scheduler.add_job(
         run_collection_task,
+        kwargs={
+            "sources": sources or ENABLED_SOURCES,
+            "keyword_override": keyword_override,
+        },
         trigger=CronTrigger(hour=hour, minute=minute),
         id="daily_education_hotspot",
         name="每日教育热点采集",
@@ -221,16 +276,44 @@ def main() -> None:
         choices=["search", "run", "start"],
         help="执行命令: search(只搜索), run(完整执行), start(定时调度)",
     )
+    parser.add_argument(
+        "-s",
+        "--sources",
+        help=(
+            "本次运行启用的搜索源，逗号分隔；"
+            "例如 wechat,xiaohongshu,zhihu，或 all"
+        ),
+    )
+    parser.add_argument(
+        "-k",
+        "--keywords",
+        help="本次运行覆盖所有搜索源的关键词，逗号分隔；不填则使用各来源配置",
+    )
     args = parser.parse_args()
+
+    try:
+        selected_sources = parse_sources_arg(args.sources)
+        keyword_override = parse_keywords_arg(args.keywords)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     if args.command == "search":
         setup_logger()
-        success = run_search_task()
+        success = run_search_task(
+            sources=selected_sources,
+            keyword_override=keyword_override,
+        )
     elif args.command == "run":
         setup_logger()
-        success = run_collection_task()
+        success = run_collection_task(
+            sources=selected_sources,
+            keyword_override=keyword_override,
+        )
     else:
-        start_scheduler()
+        start_scheduler(
+            sources=selected_sources,
+            keyword_override=keyword_override,
+        )
         return
 
     raise SystemExit(0 if success else 1)

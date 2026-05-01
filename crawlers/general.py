@@ -112,7 +112,7 @@ class GeneralEducationCrawler(BaseCrawler):
         return None
 
     def _is_education_related(self, hotspot: EducationHotspot, keywords: List[str]) -> bool:
-        text = f"{hotspot.title} {hotspot.content_summary}".lower()
+        text = f"{hotspot.title} {hotspot.content}".lower()
         education_terms = keywords + ["教育", "学校", "学生", "老师", "家长", "学习", "考试", "课程", "培训", "升学"]
         return any(term in text for term in education_terms)
 
@@ -122,7 +122,7 @@ class GeneralEducationCrawler(BaseCrawler):
             source=raw_data.get("source", "网络"),
             author=None,
             publish_time=raw_data.get("publish_time", datetime.now()),
-            content_summary=raw_data.get("summary", ""),
+            content=raw_data.get("summary", ""),
             url=raw_data.get("url", ""),
             tags=["教育", "资讯"],
         )

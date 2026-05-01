@@ -12,14 +12,13 @@ from typing import List
 from loguru import logger
 
 from config.settings import (
-    KEYWORDS,
     MEDIA_CRAWLER_DIR,
     MEDIA_CRAWLER_LOGIN_TYPE,
-    MEDIA_CRAWLER_MAX_NOTES_COUNT,
     MEDIA_CRAWLER_PYTHON_BIN,
     MEDIA_CRAWLER_TIMEOUT_SECONDS,
     ZHIHU_COOKIE,
     ZHIHU_LOGIN_TYPE,
+    ZHIHU_MAX_RESULTS_PER_KEYWORD,
 )
 from crawlers.base import BaseCrawler
 from models.hotspot import CollectionResult, EducationHotspot
@@ -34,8 +33,9 @@ class ZhihuCrawler(BaseCrawler):
         self.python_bin = MEDIA_CRAWLER_PYTHON_BIN
 
     def collect(self, keywords: List[str] | None = None, time_range_hours: tuple = (0, 48)) -> CollectionResult:
-        if keywords is None:
-            keywords = KEYWORDS
+        if not keywords:
+            logger.warning("未配置知乎搜索关键词，无法采集")
+            return CollectionResult()
 
         max_hours = time_range_hours[1] if isinstance(time_range_hours, tuple) else time_range_hours
         result = CollectionResult()
@@ -84,7 +84,7 @@ class ZhihuCrawler(BaseCrawler):
                 source="zhihu",
                 author=raw_data.get("user_nickname", "未知作者"),
                 publish_time=publish_time,
-                content_summary=(raw_data.get("content_text", "") or raw_data.get("desc", ""))[:500],
+                content=raw_data.get("content_text", "") or raw_data.get("desc", ""),
                 url=raw_data.get("content_url", ""),
                 popularity=popularity,
                 cover_image=None,
@@ -98,7 +98,7 @@ class ZhihuCrawler(BaseCrawler):
                 source="zhihu",
                 author="未知",
                 publish_time=datetime.now(),
-                content_summary="",
+                content="",
                 url="",
                 popularity=0.0,
                 cover_image=None,
@@ -123,7 +123,7 @@ class ZhihuCrawler(BaseCrawler):
             keywords_str = ",".join(keywords)
             env["MEDIA_CRAWLER_KEYWORDS"] = keywords_str
             env["MEDIA_CRAWLER_TIME_RANGE_MAX"] = str(time_range_hours)
-            env["MEDIA_CRAWLER_MAX_NOTES_COUNT"] = str(MEDIA_CRAWLER_MAX_NOTES_COUNT)
+            env["MEDIA_CRAWLER_MAX_NOTES_COUNT"] = str(ZHIHU_MAX_RESULTS_PER_KEYWORD)
 
             cmd = [
                 self.python_bin,
@@ -140,7 +140,7 @@ class ZhihuCrawler(BaseCrawler):
 
             logger.info(f"传递给 MediaCrawler 的关键词: {keywords_str}")
             logger.info(f"时间范围: {time_range_hours} 小时")
-            logger.info(f"每个关键词爬取数量: {MEDIA_CRAWLER_MAX_NOTES_COUNT}")
+            logger.info(f"每个关键词爬取数量: {ZHIHU_MAX_RESULTS_PER_KEYWORD}")
             logger.info(f"执行 MediaCrawler 知乎: {' '.join(cmd)}")
 
             completed = subprocess.run(
