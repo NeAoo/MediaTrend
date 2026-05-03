@@ -1,19 +1,25 @@
-"""
-项目配置文件
+"""Application settings facade.
 
-推荐做法：
-- 优先通过 `.env` 覆盖配置，不要直接改代码里的常量。
-- 本地第一次运行建议先只开 `wechat`。
-- `run` 需要 `LLM_API_KEY`；只验证采集链路可先用 `search`。
+Business configuration is loaded from config.yaml. Secrets and machine-local
+overrides are loaded from .env.
 """
 
 import os
 import sys
+import warnings
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+from config.app_config import load_app_config
+
+if os.getenv("PYTHON_DOTENV_DISABLED", "").strip().lower() not in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}:
+    load_dotenv()
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -50,7 +56,61 @@ def _env_list(name: str, default: list[str]) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+MIGRATED_CONFIG_ENV_KEYS = {
+    "ENABLED_SOURCES",
+    "INITIAL_COLLECT_COUNT",
+    "TOP_N_SELECT_COUNT",
+    "TIME_RANGE_MIN",
+    "TIME_RANGE_MAX",
+    "WECHAT_MP_ACCOUNTS",
+    "WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT",
+    "WECHAT_MP_LOOKBACK_DAYS",
+    "WECHAT_MP_LOGIN_TIMEOUT_SECONDS",
+    "WECHAT_MP_HEADLESS",
+    "WECHAT_MP_BROWSER_MODE",
+    "WECHAT_MP_FETCH_DETAIL_PAGE",
+    "WECHAT_MP_SLOW_MO_MS",
+    "WECHAT_MP_ACTION_DELAY_SECONDS",
+    "WECHAT_MP_ARTICLE_DELAY_SECONDS",
+    "WECHAT_MP_PAGE_DELAY_SECONDS",
+    "WECHAT_MP_ACCOUNT_DELAY_SECONDS",
+    "WECHAT_MP_RAW_OUTPUT_DIR",
+    "WECHAT_MP_STORAGE_STATE",
+    "MEDIA_CRAWLER_DIR",
+    "MEDIA_CRAWLER_MAX_NOTES_COUNT",
+    "MEDIA_CRAWLER_TIMEOUT_SECONDS",
+    "MEDIA_CRAWLER_LOGIN_TYPE",
+    "XIAOHONGSHU_LOGIN_TYPE",
+    "XIAOHONGSHU_SEARCH_KEYWORDS",
+    "XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD",
+    "ZHIHU_LOGIN_TYPE",
+    "ZHIHU_SEARCH_KEYWORDS",
+    "ZHIHU_MAX_RESULTS_PER_KEYWORD",
+    "OUTPUT_DIR",
+    "OUTPUT_FILENAME_PATTERN",
+    "LONGXIA_CANDIDATE_EXPORT_ENABLED",
+    "LONGXIA_CANDIDATE_EXPORT_DIR",
+    "LONGXIA_CANDIDATE_CONTENT_MAX_CHARS",
+    "LONGXIA_CANDIDATE_TIMEZONE",
+}
+
+
+def _warn_ignored_migrated_env_keys() -> None:
+    ignored = sorted(key for key in MIGRATED_CONFIG_ENV_KEYS if key in os.environ)
+    if not ignored:
+        return
+    warnings.warn(
+        "Ignoring environment keys that moved to config.yaml: "
+        f"{', '.join(ignored)}. Edit the file pointed to by AI_TREND_CONFIG instead.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_warn_ignored_migrated_env_keys()
+CONFIG_PATH = os.getenv("AI_TREND_CONFIG", "config.yaml").strip() or "config.yaml"
+APP_CONFIG = load_app_config(CONFIG_PATH)
 
 # ==================== API 配置 ====================
 LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
@@ -61,85 +121,75 @@ LLM_MAX_RETRIES = max(0, _env_int("LLM_MAX_RETRIES", 1))
 LLM_MAX_COMPLETION_TOKENS = max(0, _env_int("LLM_MAX_COMPLETION_TOKENS", 0))
 LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "").strip()
 SCORE_WORKERS = max(1, _env_int("SCORE_WORKERS", 5))
-SCORING_PARSE_FAILURE_SCORE = max(1.0, min(10.0, _env_float("SCORING_PARSE_FAILURE_SCORE", 1.0)))
+SCORING_PARSE_FAILURE_SCORE = max(
+    1.0,
+    min(10.0, _env_float("SCORING_PARSE_FAILURE_SCORE", 1.0)),
+)
 SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES = _env_bool(
     "SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES",
     True,
 )
 
 # ==================== 采集配置 ====================
-INITIAL_COLLECT_COUNT = _env_int("INITIAL_COLLECT_COUNT", 30)
-TOP_N_SELECT_COUNT = _env_int("TOP_N_SELECT_COUNT", 10)
-
-TIME_RANGE_MIN = _env_int("TIME_RANGE_MIN", 0)
-TIME_RANGE_MAX = _env_int("TIME_RANGE_MAX", 24)
+INITIAL_COLLECT_COUNT = APP_CONFIG.collection.initial_collect_count
+TOP_N_SELECT_COUNT = APP_CONFIG.selection.top_n
+TIME_RANGE_MIN = APP_CONFIG.collection.time_range_hours.min
+TIME_RANGE_MAX = APP_CONFIG.collection.time_range_hours.max
 
 # ==================== 数据源配置 ====================
-# 本地第一次运行建议先只开 wechat，确认采集链路正常后再加 xiaohongshu / zhihu / general。
-ENABLED_SOURCES = _env_list(
-    "ENABLED_SOURCES",
-    [
-        "wechat",
-    ],
-)
+ENABLED_SOURCES = APP_CONFIG.enabled_sources
 
-# ==================== 微信配置 ====================
+# ==================== 旧搜狗微信搜索源（非默认迁移路径） ====================
 WECHAT_SEARCH_KEYWORDS = _env_list("WECHAT_SEARCH_KEYWORDS", [])
 SOGOU_WECHAT_COOKIE = os.getenv("SOGOU_WECHAT_COOKIE", "").strip()
 WECHAT_MAX_RESULTS_PER_KEYWORD = _env_int("WECHAT_MAX_RESULTS_PER_KEYWORD", 8)
 WECHAT_USE_PLAYWRIGHT = _env_bool("WECHAT_USE_PLAYWRIGHT", True)
 WECHAT_FETCH_DETAIL_PAGE = _env_bool("WECHAT_FETCH_DETAIL_PAGE", False)
 
-# 微信公众平台后台采集：按固定公众号名称抓取最近文章，需要扫码登录公众号后台。
-WECHAT_MP_ACCOUNTS = _env_list("WECHAT_MP_ACCOUNTS", [])
-WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT = _env_int("WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT", 10)
-WECHAT_MP_LOOKBACK_DAYS = _env_int("WECHAT_MP_LOOKBACK_DAYS", 7)
-WECHAT_MP_LOGIN_TIMEOUT_SECONDS = _env_int("WECHAT_MP_LOGIN_TIMEOUT_SECONDS", 180)
-WECHAT_MP_HEADLESS = _env_bool("WECHAT_MP_HEADLESS", False)
-WECHAT_MP_FETCH_DETAIL_PAGE = _env_bool("WECHAT_MP_FETCH_DETAIL_PAGE", True)
-WECHAT_MP_SLOW_MO_MS = max(0, _env_int("WECHAT_MP_SLOW_MO_MS", 300))
-WECHAT_MP_ACTION_DELAY_SECONDS = max(0.0, _env_float("WECHAT_MP_ACTION_DELAY_SECONDS", 1.5))
-WECHAT_MP_ARTICLE_DELAY_SECONDS = max(0.0, _env_float("WECHAT_MP_ARTICLE_DELAY_SECONDS", 3.0))
-WECHAT_MP_PAGE_DELAY_SECONDS = max(0.0, _env_float("WECHAT_MP_PAGE_DELAY_SECONDS", 4.0))
-WECHAT_MP_ACCOUNT_DELAY_SECONDS = max(0.0, _env_float("WECHAT_MP_ACCOUNT_DELAY_SECONDS", 8.0))
-WECHAT_MP_RAW_OUTPUT_DIR = os.getenv("WECHAT_MP_RAW_OUTPUT_DIR", "./raw_data/wechat_mp").strip()
-WECHAT_MP_STORAGE_STATE = os.getenv(
-    "WECHAT_MP_STORAGE_STATE",
-    str(PROJECT_ROOT / "browser_data" / "wechat_mp_state.json"),
-).strip()
+# ==================== 微信公众平台后台采集 ====================
+WECHAT_MP_ACCOUNTS = APP_CONFIG.wechat_mp.accounts
+WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT = APP_CONFIG.wechat_mp.max_articles_per_account
+WECHAT_MP_LOOKBACK_DAYS = APP_CONFIG.wechat_mp.lookback_days
+WECHAT_MP_LOGIN_TIMEOUT_SECONDS = APP_CONFIG.wechat_mp.login_timeout_seconds
+WECHAT_MP_BROWSER_MODE = APP_CONFIG.wechat_mp.browser_mode
+WECHAT_MP_HEADLESS = WECHAT_MP_BROWSER_MODE == "headless"
+WECHAT_MP_FETCH_DETAIL_PAGE = APP_CONFIG.wechat_mp.fetch_detail_page
+WECHAT_MP_SLOW_MO_MS = APP_CONFIG.wechat_mp.rhythm.slow_mo_ms
+WECHAT_MP_ACTION_DELAY_SECONDS = APP_CONFIG.wechat_mp.rhythm.action_delay_seconds
+WECHAT_MP_ARTICLE_DELAY_SECONDS = APP_CONFIG.wechat_mp.rhythm.article_delay_seconds
+WECHAT_MP_PAGE_DELAY_SECONDS = APP_CONFIG.wechat_mp.rhythm.page_delay_seconds
+WECHAT_MP_ACCOUNT_DELAY_SECONDS = APP_CONFIG.wechat_mp.rhythm.account_delay_seconds
+WECHAT_MP_RAW_OUTPUT_DIR = str(
+    APP_CONFIG.resolve_path(APP_CONFIG.wechat_mp.raw_output_dir)
+)
+WECHAT_MP_STORAGE_STATE = str(
+    APP_CONFIG.resolve_path(APP_CONFIG.wechat_mp.storage_state)
+)
 
 # ==================== MediaCrawler 配置 ====================
-MEDIA_CRAWLER_DIR = Path(
-    os.getenv("MEDIA_CRAWLER_DIR", str(PROJECT_ROOT / "MediaCrawler"))
-).expanduser().resolve()
-MEDIA_CRAWLER_PYTHON_BIN = os.getenv("MEDIA_CRAWLER_PYTHON_BIN", sys.executable).strip() or sys.executable
-MEDIA_CRAWLER_MAX_NOTES_COUNT = _env_int("MEDIA_CRAWLER_MAX_NOTES_COUNT", 20)
-MEDIA_CRAWLER_TIMEOUT_SECONDS = _env_int("MEDIA_CRAWLER_TIMEOUT_SECONDS", 900)
-MEDIA_CRAWLER_LOGIN_TYPE = os.getenv("MEDIA_CRAWLER_LOGIN_TYPE", "qrcode").strip() or "qrcode"
-
-XIAOHONGSHU_LOGIN_TYPE = (
-    os.getenv("XIAOHONGSHU_LOGIN_TYPE", MEDIA_CRAWLER_LOGIN_TYPE).strip()
-    or MEDIA_CRAWLER_LOGIN_TYPE
+MEDIA_CRAWLER_DIR = APP_CONFIG.resolve_path(APP_CONFIG.media_crawler.dir)
+MEDIA_CRAWLER_PYTHON_BIN = (
+    os.getenv("MEDIA_CRAWLER_PYTHON_BIN", "").strip()
+    or APP_CONFIG.media_crawler.python_bin
+    or sys.executable
 )
-XIAOHONGSHU_SEARCH_KEYWORDS = _env_list("XIAOHONGSHU_SEARCH_KEYWORDS", [])
-XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD = _env_int(
-    "XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD",
-    MEDIA_CRAWLER_MAX_NOTES_COUNT,
+MEDIA_CRAWLER_MAX_NOTES_COUNT = APP_CONFIG.media_crawler.max_notes_count
+MEDIA_CRAWLER_TIMEOUT_SECONDS = APP_CONFIG.media_crawler.timeout_seconds
+MEDIA_CRAWLER_LOGIN_TYPE = APP_CONFIG.media_crawler.login_type
+
+XIAOHONGSHU_LOGIN_TYPE = APP_CONFIG.xiaohongshu.login_type
+XIAOHONGSHU_SEARCH_KEYWORDS = APP_CONFIG.xiaohongshu.keywords
+XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD = (
+    APP_CONFIG.xiaohongshu.max_results_per_keyword
 )
 XIAOHONGSHU_COOKIE = os.getenv("XIAOHONGSHU_COOKIE", "").strip()
 
-ZHIHU_LOGIN_TYPE = (
-    os.getenv("ZHIHU_LOGIN_TYPE", MEDIA_CRAWLER_LOGIN_TYPE).strip()
-    or MEDIA_CRAWLER_LOGIN_TYPE
-)
-ZHIHU_SEARCH_KEYWORDS = _env_list("ZHIHU_SEARCH_KEYWORDS", [])
-ZHIHU_MAX_RESULTS_PER_KEYWORD = _env_int(
-    "ZHIHU_MAX_RESULTS_PER_KEYWORD",
-    MEDIA_CRAWLER_MAX_NOTES_COUNT,
-)
+ZHIHU_LOGIN_TYPE = APP_CONFIG.zhihu.login_type
+ZHIHU_SEARCH_KEYWORDS = APP_CONFIG.zhihu.keywords
+ZHIHU_MAX_RESULTS_PER_KEYWORD = APP_CONFIG.zhihu.max_results_per_keyword
 ZHIHU_COOKIE = os.getenv("ZHIHU_COOKIE", "").strip()
 
-# ==================== 通用资讯配置 ====================
+# ==================== 通用资讯配置（保留为可选 legacy source） ====================
 GENERAL_SEARCH_KEYWORDS = _env_list("GENERAL_SEARCH_KEYWORDS", [])
 GENERAL_MAX_LINKS_PER_SITE = _env_int("GENERAL_MAX_LINKS_PER_SITE", 30)
 GENERAL_NEWS_SITES = [
@@ -161,20 +211,21 @@ GENERAL_NEWS_SITES = [
 ]
 
 # ==================== 输出配置 ====================
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./output").strip() or "./output"
+OUTPUT_DIR = str(APP_CONFIG.resolve_path(APP_CONFIG.output.dir))
+OUTPUT_FILENAME_PATTERN = APP_CONFIG.output.filename_pattern
 OUTPUT_FORMAT = "markdown"
 
-# ==================== longxia 候选投放配置 ====================
-LONGXIA_CANDIDATE_EXPORT_ENABLED = _env_bool("LONGXIA_CANDIDATE_EXPORT_ENABLED", True)
-LONGXIA_CANDIDATE_EXPORT_DIR = (
-    os.getenv("LONGXIA_CANDIDATE_EXPORT_DIR", "./output/longxia_trend_candidates").strip()
-    or "./output/longxia_trend_candidates"
+# ==================== longxia 候选投放配置（默认关闭） ====================
+LONGXIA_CANDIDATE_EXPORT_ENABLED = (
+    APP_CONFIG.output.longxia_candidate_export_enabled
 )
-LONGXIA_CANDIDATE_CONTENT_MAX_CHARS = max(500, _env_int("LONGXIA_CANDIDATE_CONTENT_MAX_CHARS", 5000))
-LONGXIA_CANDIDATE_TIMEZONE = (
-    os.getenv("LONGXIA_CANDIDATE_TIMEZONE", "Asia/Shanghai").strip()
-    or "Asia/Shanghai"
+LONGXIA_CANDIDATE_EXPORT_DIR = str(
+    APP_CONFIG.resolve_path(APP_CONFIG.output.longxia_candidate_export_dir)
 )
+LONGXIA_CANDIDATE_CONTENT_MAX_CHARS = (
+    APP_CONFIG.output.longxia_candidate_content_max_chars
+)
+LONGXIA_CANDIDATE_TIMEZONE = APP_CONFIG.output.longxia_candidate_timezone
 LONGXIA_SSH_TARGET = os.getenv("LONGXIA_SSH_TARGET", "longxia").strip() or "longxia"
 LONGXIA_REMOTE_CANDIDATE_ROOT = (
     os.getenv(

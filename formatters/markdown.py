@@ -16,7 +16,7 @@ from loguru import logger
 import json
 import argparse
 
-from config.settings import OUTPUT_DIR
+from config.settings import OUTPUT_DIR, OUTPUT_FILENAME_PATTERN
 from models.hotspot import CONTENT_MAX_LENGTH, EducationHotspot
 
 
@@ -42,7 +42,10 @@ class MarkdownGenerator:
             date = datetime.now()
 
         # 生成文件名
-        filename = f"教育热点日报_{date.strftime('%Y%m%d')}.md"
+        filename = OUTPUT_FILENAME_PATTERN.format(
+            date=date.strftime("%Y%m%d"),
+            datetime=date.strftime("%Y%m%d_%H%M%S"),
+        )
         filepath = self.output_dir / filename
 
         logger.info(f"正在生成日报: {filename}")
