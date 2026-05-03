@@ -56,7 +56,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1").strip()
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4").strip() or "gpt-5.4"
+LLM_TIMEOUT_SECONDS = max(10.0, _env_float("LLM_TIMEOUT_SECONDS", 120.0))
+LLM_MAX_RETRIES = max(0, _env_int("LLM_MAX_RETRIES", 1))
+LLM_MAX_COMPLETION_TOKENS = max(0, _env_int("LLM_MAX_COMPLETION_TOKENS", 0))
+LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "").strip()
 SCORE_WORKERS = max(1, _env_int("SCORE_WORKERS", 5))
+SCORING_PARSE_FAILURE_SCORE = max(1.0, min(10.0, _env_float("SCORING_PARSE_FAILURE_SCORE", 1.0)))
+SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES = _env_bool(
+    "SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES",
+    True,
+)
 
 # ==================== 采集配置 ====================
 INITIAL_COLLECT_COUNT = _env_int("INITIAL_COLLECT_COUNT", 30)
@@ -154,6 +163,26 @@ GENERAL_NEWS_SITES = [
 # ==================== 输出配置 ====================
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./output").strip() or "./output"
 OUTPUT_FORMAT = "markdown"
+
+# ==================== longxia 候选投放配置 ====================
+LONGXIA_CANDIDATE_EXPORT_ENABLED = _env_bool("LONGXIA_CANDIDATE_EXPORT_ENABLED", True)
+LONGXIA_CANDIDATE_EXPORT_DIR = (
+    os.getenv("LONGXIA_CANDIDATE_EXPORT_DIR", "./output/longxia_trend_candidates").strip()
+    or "./output/longxia_trend_candidates"
+)
+LONGXIA_CANDIDATE_CONTENT_MAX_CHARS = max(500, _env_int("LONGXIA_CANDIDATE_CONTENT_MAX_CHARS", 5000))
+LONGXIA_CANDIDATE_TIMEZONE = (
+    os.getenv("LONGXIA_CANDIDATE_TIMEZONE", "Asia/Shanghai").strip()
+    or "Asia/Shanghai"
+)
+LONGXIA_SSH_TARGET = os.getenv("LONGXIA_SSH_TARGET", "longxia").strip() or "longxia"
+LONGXIA_REMOTE_CANDIDATE_ROOT = (
+    os.getenv(
+        "LONGXIA_REMOTE_CANDIDATE_ROOT",
+        "/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/trend_candidates",
+    ).strip()
+    or "/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/trend_candidates"
+)
 
 # ==================== 调度配置 ====================
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "08:00").strip() or "08:00"
