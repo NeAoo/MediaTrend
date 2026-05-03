@@ -1,0 +1,62 @@
+# Copy to config.yaml and edit. config.yaml is ignored by git.
+
+enabled_sources:
+  - wechat_mp
+  - xiaohongshu
+  - zhihu
+
+collection:
+  initial_collect_count: 30
+  time_range_hours:
+    min: 0
+    max: 24
+
+selection:
+  top_n: 10
+
+wechat_mp:
+  accounts:
+    - 中国教育报
+    - 人民教育
+  max_articles_per_account: 10
+  lookback_days: 7
+  login_timeout_seconds: 180
+  browser_mode: auto
+  fetch_detail_page: true
+  raw_output_dir: ./raw_data/wechat_mp
+  storage_state: ./browser_data/wechat_mp_state.json
+  rhythm:
+    slow_mo_ms: 300
+    action_delay_seconds: 1.5
+    article_delay_seconds: 3.0
+    page_delay_seconds: 4.0
+    account_delay_seconds: 8.0
+
+trend_crawler_runtime:
+  dir: ./TrendCrawlerRuntime
+  python_bin: ""
+  timeout_seconds: 900
+  max_notes_count: 20
+  login_type: qrcode
+
+xiaohongshu:
+  keywords:
+    - 教育改革
+    - 中考
+  max_results_per_keyword: 20
+  login_type: qrcode
+
+zhihu:
+  keywords:
+    - 教育改革
+    - 中考
+  max_results_per_keyword: 20
+  login_type: qrcode
+
+output:
+  dir: ./output
+  filename_pattern: 教育热点日报_{date}.md
+  longxia_candidate_export_enabled: false
+  longxia_candidate_export_dir: ./output/longxia_trend_candidates
+  longxia_candidate_content_max_chars: 5000
+  longxia_candidate_timezone: Asia/Shanghai
