@@ -8,7 +8,7 @@
 - `xiaohongshu`：通过内置 `MediaCrawler` 采集小红书搜索结果。
 - `zhihu`：通过内置 `MediaCrawler` 采集知乎搜索结果。
 
-`wechat` 是旧的搜狗微信搜索源，不属于默认迁移路径。longxia 自动上传默认关闭；正常运行的最终产物是 `output/` 下的 Markdown 文件。
+longxia 自动上传默认关闭；正常运行的最终产物是 `output/` 下的 Markdown 文件。
 
 ## 快速迁移
 
