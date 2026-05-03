@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
 
-CONTENT_MAX_LENGTH = 3000
+CONTENT_MAX_LENGTH = 5000
 
 
 class EducationHotspot(BaseModel):
@@ -14,7 +14,7 @@ class EducationHotspot(BaseModel):
     title: str = Field(..., description="标题")
     source: str = Field(..., description="来源平台")
     publish_time: datetime = Field(..., description="发布时间")
-    content: str = Field("", description="完整正文，最多3000字")
+    content: str = Field("", description="完整正文，最多5000字")
     url: str = Field(..., description="原文链接")
 
     author: Optional[str] = Field(None, description="作者/发布者")

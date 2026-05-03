@@ -218,7 +218,46 @@ python scripts/search_zhihu.py
 2. 合并多源数据为统一JSON文件
 3. 使用AI对内容进行智能评分
 4. 筛选至少前N条高分内容；若第N名后续文章同分，则并列保留
-5. 生成Markdown日报
+5. 生成Markdown日报，并额外导出 longxia 可读取的人工候选 md
+
+#### longxia 候选自动投放
+
+`python main.py run` 默认会把最终入选的高分内容拆成 longxia 需要的候选文件：
+
+```text
+output/longxia_trend_candidates/YYYY-MM-DD/
+  YYYY-MM-DD_01.md
+  YYYY-MM-DD_02.md
+  ...
+  manifest.json
+```
+
+每个 md 对应一篇候选文章，只包含标题、账号、来源、发布时间、原文链接和正文；正文默认最多 `LONGXIA_CANDIDATE_CONTENT_MAX_CHARS=5000` 字。`manifest.json` 用于记录当天筛选到的候选列表，longxia 不会把它当作候选文章读取。Mac 本地每天 06:00 自动运行并上传到 longxia：
+
+```bash
+chmod +x scripts/install_macos_daily_longxia_job.sh
+./scripts/install_macos_daily_longxia_job.sh
+```
+
+手动跑一次并上传：
+
+```bash
+scripts/run_daily_longxia_candidates.sh
+```
+
+卸载本机定时任务：
+
+```bash
+scripts/uninstall_macos_daily_longxia_job.sh
+```
+
+定时任务日志：
+
+```text
+logs/mac_daily_longxia_candidates.log
+logs/launchd_longxia_candidates.out.log
+logs/launchd_longxia_candidates.err.log
+```
 
 **输出示例**：
 ```
@@ -368,11 +407,11 @@ tail -f logs/agent.log
 系统使用 OpenAI 兼容的 API 格式，对每篇内容进行独立智能评分。
 
 **评分流程**：
-1. 每篇文章单独发送给大模型，正文最多保留 3000 字
+1. 每篇文章单独发送给大模型，正文最多保留 5000 字
 2. 默认用 `SCORE_WORKERS=5` 并发评分，可在 `.env` 调整
 3. 大模型根据5个维度进行评分并返回JSON格式结果
 4. 系统解析评分结果并赋值给对应的热点对象
-5. 单篇失败时只影响这一篇，并赋予默认分数（5.0分）
+5. 单篇解析失败时只影响这一篇，并按 `SCORING_PARSE_FAILURE_SCORE` 给低分；如果全部解析失败，默认随机抽取 `TOP_N_SELECT_COUNT` 篇继续上传候选
 
 **综合评分计算公式**：
 ```

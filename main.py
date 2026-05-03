@@ -5,18 +5,22 @@
 
 import argparse
 from pathlib import Path
+import random
 
 from loguru import logger
 
 from config.settings import (
     ENABLED_SOURCES,
     LLM_API_KEY,
+    LONGXIA_CANDIDATE_EXPORT_ENABLED,
     LOG_FILE,
     LOG_LEVEL,
+    SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES,
     SCHEDULE_TIME,
     TOP_N_SELECT_COUNT,
 )
 from crawlers.manager import AVAILABLE_SOURCES, CrawlerManager
+from formatters.longxia_candidates import LongxiaCandidateExporter
 from formatters.markdown import MarkdownGenerator
 from merger.data_merger import DataMerger
 from scorers.scorer import ContentScorer
@@ -85,6 +89,21 @@ def _source_keywords_override(
     return {source: keyword_override for source in sources}
 
 
+def _is_scoring_failed(hotspot) -> bool:
+    details = getattr(hotspot, "score_details", None)
+    return isinstance(details, dict) and details.get("scoring_failed") is True
+
+
+def _select_random_fallback(hotspots: list, n: int) -> list:
+    if n <= 0:
+        return []
+    items = list(hotspots)
+    random.shuffle(items)
+    selected = items[: min(n, len(items))]
+    logger.warning(f"AI 打分整体不可用，随机选取 {len(selected)} 条候选继续上传")
+    return selected
+
+
 def run_collection_task(
     sources: list[str] | None = None,
     keyword_override: list[str] | None = None,
@@ -130,6 +149,14 @@ def run_collection_task(
         logger.info("\n第三步：开始对内容进行智能打分...")
         scorer = ContentScorer()
         scored_hotspots = scorer.score_batch(hotspots)
+        failed_scores = [hotspot for hotspot in scored_hotspots if _is_scoring_failed(hotspot)]
+        if failed_scores:
+            logger.warning(f"打分异常内容: {len(failed_scores)}/{len(scored_hotspots)} 条")
+        use_random_fallback = (
+            scored_hotspots
+            and len(failed_scores) == len(scored_hotspots)
+            and SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES
+        )
         logger.info("打分完成，所有内容已评分")
 
         logger.info("\n评分概览（前5条）:")
@@ -148,7 +175,10 @@ def run_collection_task(
             logger.warning("打分数据保存失败")
 
         logger.info(f"\n第五步：筛选至少前 {TOP_N_SELECT_COUNT} 条高分内容，同分并列保留...")
-        top_hotspots = scorer.select_top_n(scored_hotspots, TOP_N_SELECT_COUNT)
+        if use_random_fallback:
+            top_hotspots = _select_random_fallback(scored_hotspots, TOP_N_SELECT_COUNT)
+        else:
+            top_hotspots = scorer.select_top_n(scored_hotspots, TOP_N_SELECT_COUNT)
         logger.info(f"筛选完成，最终选取 {len(top_hotspots)} 条优质内容")
 
         logger.info("\n最终入选热点（按评分排序）:")
@@ -160,6 +190,12 @@ def run_collection_task(
         output_file = generator.generate_daily_report(top_hotspots)
         logger.info(f"日报生成成功，文件位置: {output_file}")
 
+        candidate_dir = ""
+        if LONGXIA_CANDIDATE_EXPORT_ENABLED:
+            logger.info("\n第七步：生成 longxia 人工候选 md...")
+            candidate_dir = str(LongxiaCandidateExporter().export(top_hotspots))
+            logger.info(f"longxia 候选目录: {candidate_dir}")
+
         logger.info("\n" + "=" * 60)
         logger.info("教育热点搜集任务全部完成")
         logger.info("=" * 60)
@@ -169,6 +205,8 @@ def run_collection_task(
         logger.info(f"   - 打分数据: {scored_file}")
         logger.info(f"   - 最终入选: {len(top_hotspots)} 条")
         logger.info(f"   - 输出文件: {output_file}")
+        if candidate_dir:
+            logger.info(f"   - longxia候选: {candidate_dir}")
         logger.info(f"   - 最高评分: {top_hotspots[0].score:.2f}")
         logger.info(f"   - 日志文件: {LOG_FILE}")
         return True

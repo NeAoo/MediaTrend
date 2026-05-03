@@ -1,6 +1,6 @@
 """
 Markdown 文档生成器
-将筛选出的教育热点整合成家长友好的 Markdown 文档
+将筛选出的热点候选整合成 Markdown 文档
 """
 import sys
 from pathlib import Path
@@ -29,7 +29,7 @@ class MarkdownGenerator:
 
     def generate_daily_report(self, hotspots: List[EducationHotspot], date: datetime = None) -> str:
         """
-        生成每日教育热点报告
+        生成每日热点候选报告
 
         Args:
             hotspots: Top 10 热点列表
@@ -116,7 +116,7 @@ class MarkdownGenerator:
         # 计算总热度
         total_popularity = sum(item.get('popularity', 0) for item in scored_data)
         
-        md_content = f"""# 📚 教育热点精选（AI智能评分版）
+        md_content = f"""# 📚 热点候选精选（AI智能评分版）
 
 **生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
 **数据来源**: 多平台采集 + AI智能评分  
@@ -130,7 +130,7 @@ class MarkdownGenerator:
 - **最高评分**: {max_score:.2f}
 - **最低评分**: {min_score:.2f}
 - **总热度值**: {total_popularity:,.0f}
-- **评分维度**: 热度(20%) + 权威性(25%) + 内容质量(25%) + 实用性(20%) + 时效性(10%)
+- **评分维度**: 热度(35%) + 时效性(18%) + 大众共鸣(18%) + 对标价值(14%) + 内容质量(8%) + 权威性(4%) + 风险控制(3%)
 
 ---
 
@@ -151,14 +151,16 @@ class MarkdownGenerator:
 本报告采用AI大模型对内容进行多维度智能评分：
 
 ### 评分维度
-1. **🔥 热度 (20%)**: 内容的关注度和传播度
-2. **👑 权威性 (25%)**: 信息来源的可靠性和专业性
-3. **📚 内容质量 (25%)**: 信息的完整性、准确性和深度
-4. **💡 大众共鸣 (16%)**: 普通读者是否有讨论、转发、评论或共情的理由
-5. **⏰ 信息时效性 (10%)**: 内容的新鲜程度和及时性
+1. **🔥 热度 (35%)**: 内容的关注度、打开率和传播度
+2. **⏰ 信息时效性 (18%)**: 内容的新鲜程度和发布窗口
+3. **💡 大众共鸣 (18%)**: 普通读者是否有讨论、转发、评论或共情的理由
+4. **🧭 对标价值 (14%)**: 是否适合作为标题、冲突、叙事节奏和情绪推进的母稿
+5. **📚 内容质量 (8%)**: 信息的完整性、准确性和深度
+6. **👑 权威性 (4%)**: 信息来源的可靠性和可核查性
+7. **🛡️ 风险控制 (3%)**: 是否适合公开改写和发布
 
 ### 综合评分公式
-综合评分 = 热度×0.30 + 时效性×0.20 + 大众共鸣×0.16 + 内容质量×0.14 + 权威性×0.10 + 教育/家庭相关性×0.05 + 风险控制×0.05
+综合评分 = 热度×0.35 + 时效性×0.18 + 大众共鸣×0.18 + 对标价值×0.14 + 内容质量×0.08 + 权威性×0.04 + 风险控制×0.03
 
 ### 使用说明
 - 评分越高表示内容价值越大
@@ -224,7 +226,7 @@ class MarkdownGenerator:
             quality = score_details.get('quality', 0)
             resonance = score_details.get('resonance', score_details.get('practicality', 0))
             timeliness = score_details.get('timeliness', 0)
-            education_family_relevance = score_details.get('education_family_relevance', score_details.get('account_fit', 0))
+            reference_value = score_details.get('reference_value', score_details.get('education_family_relevance', score_details.get('account_fit', 0)))
             risk_control = score_details.get('risk_control', 0)
 
             content += f"""**📈 评分详情**:
@@ -233,7 +235,7 @@ class MarkdownGenerator:
 - 📚 内容质量: {quality:.1f}/10
 - 💡 大众共鸣: {resonance:.1f}/10
 - ⏰ 时效性: {timeliness:.1f}/10
-- 👪 教育/家庭相关性: {education_family_relevance:.1f}/10
+- 🧭 对标价值: {reference_value:.1f}/10
 - 🛡️ 风险控制: {risk_control:.1f}/10
 
 """
@@ -480,7 +482,7 @@ class MarkdownGenerator:
             time_range_desc = f"{TIME_RANGE_MIN}-{TIME_RANGE_MAX}小时"
         
         # 文档头部
-        md_content = f"""# 📚 教育热点日报
+        md_content = f"""# 📚 热点候选日报
 
 **报告日期**: {date.strftime('%Y年%m月%d日')}  
 **生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
@@ -491,17 +493,17 @@ class MarkdownGenerator:
 
 ## 📊 今日热点概览
 
-> 本报告精选了{time_range_desc}内最具价值的教育热点资讯，涵盖政策解读、家庭教育、升学指导等多个维度，帮助家长及时了解教育动态。
+> 本报告精选了{time_range_desc}内最适合作为公众号对标母稿的热点候选，重点关注打开率、传播性、社会情绪、冲突强度和可改写空间。
 
 ### 热点分布
-- **政策类**: {self._count_by_category(hotspots, '政策')} 条
-- **家庭教育**: {self._count_by_category(hotspots, '家庭')} 条
-- **升学考试**: {self._count_by_category(hotspots, '升学')} 条
-- **其他**: {len(hotspots) - self._count_by_category(hotspots, '政策') - self._count_by_category(hotspots, '家庭') - self._count_by_category(hotspots, '升学')} 条
+- **政策/规则**: {self._count_by_category(hotspots, '政策')} 条
+- **家庭/关系**: {self._count_by_category(hotspots, '家庭')} 条
+- **升学/教育**: {self._count_by_category(hotspots, '升学')} 条
+- **其他社会热点**: {len(hotspots) - self._count_by_category(hotspots, '政策') - self._count_by_category(hotspots, '家庭') - self._count_by_category(hotspots, '升学')} 条
 
 ---
 
-## 🔥 Top {len(hotspots)} 教育热点详情
+## 🔥 Top {len(hotspots)} 热点候选详情
 
 """
 
@@ -513,20 +515,20 @@ class MarkdownGenerator:
         md_content += f"""
 ---
 
-## 💡 温馨提示
+## 💡 使用提示
 
-1. **理性看待**: 教育政策和建议因地区、个体差异而异，请结合实际情况参考
-2. **多方求证**: 重要信息建议通过官方渠道进一步核实
-3. **持续学习**: 教育理念不断更新，保持学习心态很重要
-4. **关注孩子**: 每个孩子都是独特的，适合的教育方式才是最好的
+1. **优先看传播性**: 高分内容更适合作为公众号热点对标母稿
+2. **多方求证**: 涉及具体人物、机构、政策、医疗等内容，发布前仍需二次核查
+3. **看结构而不是照搬**: 重点借鉴标题、冲突、叙事节奏和情绪推进
+4. **轻量转化**: 智趣点读广告适合放在结尾，避免硬转教育
 
 ---
 
 ## 📌 数据来源
 
-本报告数据来源于微信公众号、小红书、教育资讯网站等多个渠道，经AI智能评分筛选后生成。
+本报告数据来源于微信公众号、小红书、资讯网站等多个渠道，经AI智能评分筛选后生成。
 
-**评分维度**: 热度、时效性、大众共鸣、内容质量、权威性、教育/家庭相关性、风险控制
+**评分维度**: 热度、时效性、大众共鸣、对标价值、内容质量、权威性、风险控制
 
 ---
 
@@ -592,7 +594,7 @@ class MarkdownGenerator:
 - 内容质量: {self._get_score_detail(hotspot, 'quality'):.1f}
 - 大众共鸣: {self._get_score_detail(hotspot, 'resonance'):.1f}
 - 时效性: {self._get_score_detail(hotspot, 'timeliness'):.1f}
-- 教育/家庭相关性: {self._get_score_detail(hotspot, 'education_family_relevance'):.1f}
+- 对标价值: {self._get_score_detail(hotspot, 'reference_value'):.1f}
 - 风险控制: {self._get_score_detail(hotspot, 'risk_control'):.1f}
 
 [🔗 查看原文]({hotspot.url})
@@ -607,37 +609,44 @@ class MarkdownGenerator:
         title_lower = hotspot.title.lower()
 
         if any(kw in title_lower for kw in ['政策', '规定', '改革', '通知', '发布']):
-            return "📋 政策解读"
+            return "📋 政策/规则"
         elif any(kw in title_lower for kw in ['家庭', '亲子', '家长', '育儿']):
-            return "👨‍👩‍👧 家庭教育"
+            return "👨‍👩‍👧 家庭/关系"
         elif any(kw in title_lower for kw in ['中考', '高考', '升学', '志愿', '招生']):
-            return "🎓 升学考试"
+            return "🎓 升学/教育"
         elif any(kw in title_lower for kw in ['学习', '方法', '习惯', '阅读']):
-            return "📖 学习方法"
+            return "📖 学习/成长"
         elif any(kw in title_lower for kw in ['心理', '健康', '近视', '睡眠']):
-            return "💚 身心健康"
+            return "💚 健康/生活"
         else:
-            return "📰 教育资讯"
+            return "📰 社会热点"
 
     def _generate_recommendation(self, hotspot: EducationHotspot) -> str:
         """生成推荐理由"""
         score = hotspot.score or 0
 
         if score >= 8.5:
-            return "⭐⭐⭐ 强烈推荐！这条资讯对家长非常有价值，建议仔细阅读并收藏。"
+            return "⭐⭐⭐ 强烈推荐！这条内容具备较强打开率和对标价值，建议优先进入候选。"
         elif score >= 7.5:
-            return "⭐⭐ 值得关注的优质内容，可以为家长提供有价值的参考信息。"
+            return "⭐⭐ 值得关注的优质热点，适合进一步核查后改写。"
         elif score >= 6.0:
-            return "⭐ 具有一定参考价值，可以了解相关教育动态。"
+            return "⭐ 具有一定参考价值，可作为备选热点线索。"
         else:
             return "可作为一般性了解，建议结合其他信息源综合判断。"
 
     def _get_score_detail(self, hotspot: EducationHotspot, dimension: str) -> float:
         """获取评分细节"""
         if hotspot.score_details and isinstance(hotspot.score_details, dict):
+            if dimension == "reference_value":
+                return hotspot.score_details.get(
+                    "reference_value",
+                    hotspot.score_details.get(
+                        "education_family_relevance",
+                        hotspot.score_details.get("account_fit", 5.0),
+                    ),
+                )
             fallback_keys = {
                 "resonance": "practicality",
-                "education_family_relevance": "account_fit",
             }
             return hotspot.score_details.get(
                 dimension,
