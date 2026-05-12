@@ -150,7 +150,12 @@ async def update_xhs_note(note_item: Dict):
         "source_keyword": source_keyword_var.get(),  # Search keyword
         "xsec_token": note_item.get("xsec_token"),  # xsec_token
     }
-    utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
+    utils.logger.info(
+        f"[store.xhs.update_xhs_note] xhs note: "
+        f"note_id={local_db_item.get('note_id')}, "
+        f"type={local_db_item.get('type')}, "
+        f"title={local_db_item.get('title')}"
+    )
     await XhsStoreFactory.create_store().store_content(local_db_item)
 
 

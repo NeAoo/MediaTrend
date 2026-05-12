@@ -154,7 +154,12 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         page=page,
                         sort=(SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != "" else SearchSortType.GENERAL),
                     )
-                    utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes response: {notes_res}")
+                    response_items = notes_res.get("items", []) if notes_res else []
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.search] Search notes response: "
+                        f"has_more={notes_res.get('has_more') if notes_res else None}, "
+                        f"item_count={len(response_items)}"
+                    )
                     if not notes_res or not notes_res.get("has_more", False):
                         utils.logger.info("[XiaoHongShuCrawler.search] No more content!")
                         break
@@ -175,7 +180,15 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             note_ids.append(note_detail.get("note_id"))
                             xsec_tokens.append(note_detail.get("xsec_token"))
                     page += 1
-                    utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
+                    detail_note_ids = [
+                        note_detail.get("note_id")
+                        for note_detail in note_details
+                        if note_detail and note_detail.get("note_id")
+                    ]
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.search] Note details fetched: "
+                        f"count={len(detail_note_ids)}, note_ids={detail_note_ids}"
+                    )
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
 
                     # Sleep after each page navigation

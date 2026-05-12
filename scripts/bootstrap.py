@@ -16,15 +16,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-RUNTIME_DIRS = [
+BASE_RUNTIME_DIRS = [
     "browser_data",
     "raw_data",
     "merged_data",
     "scored_data",
     "output",
     "logs",
-    "MediaCrawler/browser_data",
-    "MediaCrawler/data",
 ]
 
 CONFIG_VALIDATION_MODULES = {
@@ -131,11 +129,49 @@ def missing_config_validation_modules() -> list[str]:
     ]
 
 
+def runtime_dirs_from_config() -> list[str]:
+    media_crawler_dir = "MediaCrawler"
+    try:
+        from config.app_config import load_app_config
+
+        app_config = load_app_config(os.getenv("AI_TREND_CONFIG", "config.yaml"))
+        media_crawler_path = app_config.resolve_path(app_config.media_crawler.dir)
+        if is_relative_to(media_crawler_path.resolve(), PROJECT_ROOT.resolve()):
+            media_crawler_dir = str(media_crawler_path.relative_to(PROJECT_ROOT))
+        else:
+            media_crawler_dir = str(media_crawler_path)
+    except Exception:
+        media_crawler_dir = "MediaCrawler"
+
+    return BASE_RUNTIME_DIRS + [
+        f"{media_crawler_dir}/browser_data",
+        f"{media_crawler_dir}/data",
+    ]
+
+
 def ensure_runtime_dirs() -> None:
-    for item in RUNTIME_DIRS:
-        path = PROJECT_ROOT / item
+    for item in runtime_dirs_from_config():
+        path = Path(item).expanduser()
+        if not path.is_absolute():
+            path = PROJECT_ROOT / path
         path.mkdir(parents=True, exist_ok=True)
-        print(f"OK: directory {item}")
+        label = path.relative_to(PROJECT_ROOT) if is_relative_to(path, PROJECT_ROOT) else path
+        print(f"OK: directory {label}")
+
+
+def media_crawler_dir_from_config() -> Path:
+    from config.app_config import load_app_config
+
+    app_config = load_app_config(os.getenv("AI_TREND_CONFIG", "config.yaml"))
+    return app_config.resolve_path(app_config.media_crawler.dir)
+
+
+def has_login_state(path: Path) -> bool:
+    if path.is_file():
+        return path.stat().st_size > 0
+    if path.is_dir():
+        return any(path.iterdir())
+    return False
 
 
 def validate_required_files() -> bool:
@@ -172,13 +208,18 @@ def validate_app_config() -> bool:
 
 
 def report_login_state() -> None:
+    try:
+        media_crawler_dir = media_crawler_dir_from_config()
+    except Exception:
+        media_crawler_dir = PROJECT_ROOT / "MediaCrawler"
     checks = [
         ("wechat_mp", PROJECT_ROOT / "browser_data" / "wechat_mp_state.json"),
-        ("mediacrawler", PROJECT_ROOT / "MediaCrawler" / "browser_data"),
+        ("mediacrawler", media_crawler_dir / "browser_data"),
     ]
     for label, path in checks:
-        if path.exists():
-            print(f"OK: {label} login state exists at {path.relative_to(PROJECT_ROOT)}")
+        if has_login_state(path):
+            display = path.relative_to(PROJECT_ROOT) if is_relative_to(path, PROJECT_ROOT) else path
+            print(f"OK: {label} login state exists at {display}")
         else:
             print(f"INFO: {label} login state missing; first run will require QR login")
 
@@ -196,11 +237,20 @@ def main() -> int:
     ensure_runtime_dirs()
     files_ok = validate_required_files()
 
-    commands = [
-        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
-        [sys.executable, "-m", "pip", "install", "-r", "MediaCrawler/requirements.txt"],
-        [sys.executable, "-m", "playwright", "install", "chromium"],
-    ]
+    try:
+        media_crawler_dir = media_crawler_dir_from_config()
+    except Exception:
+        media_crawler_dir = PROJECT_ROOT / "MediaCrawler"
+
+    commands = [[sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]]
+    media_requirements = media_crawler_dir / "requirements.txt"
+    if media_requirements.exists():
+        commands.append(
+            [sys.executable, "-m", "pip", "install", "-r", str(media_requirements)]
+        )
+    else:
+        print(f"WARN: MediaCrawler requirements not found: {media_requirements}")
+    commands.append([sys.executable, "-m", "playwright", "install", "chromium"])
     for command in commands:
         if run_command(command, check=args.check) != 0:
             return 1

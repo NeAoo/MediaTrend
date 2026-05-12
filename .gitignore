@@ -48,6 +48,9 @@ nul
 *.html
 .DS_Store
 
+# 外置第三方依赖
+third_party/
+
 # 运行时输出
 merged_data/*
 !merged_data/.gitkeep

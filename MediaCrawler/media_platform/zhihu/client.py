@@ -225,7 +225,12 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
             "vertical": note_type.value,
         }
         search_res = await self.get(uri, params)
-        utils.logger.info(f"[ZhiHuClient.get_note_by_keyword] Search result: {search_res}")
+        search_items = search_res.get("data", []) if search_res else []
+        paging = search_res.get("paging", {}) if search_res else {}
+        utils.logger.info(
+            f"[ZhiHuClient.get_note_by_keyword] Search result: "
+            f"item_count={len(search_items)}, is_end={paging.get('is_end')}"
+        )
         return self._extractor.extract_contents_from_search(search_res)
 
     async def get_root_comments(
@@ -459,7 +464,12 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         }
         return await self.get(uri, params)
 
-    async def get_all_anwser_by_creator(self, creator: ZhihuCreator, crawl_interval: float = 1.0, callback: Optional[Callable] = None) -> List[ZhihuContent]:
+    async def get_all_anwser_by_creator(
+        self,
+        creator: ZhihuCreator,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+    ) -> List[ZhihuContent]:
         """
         Get all answers by creator
         Args:
@@ -474,18 +484,25 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         is_end: bool = False
         offset: int = 0
         limit: int = 20
-        while not is_end:
-            res = await self.get_creator_answers(creator.url_token, offset, limit)
+        max_contents = max(1, int(getattr(config, "CRAWLER_MAX_NOTES_COUNT", limit)))
+        while not is_end and len(all_contents) < max_contents:
+            page_limit = min(limit, max_contents - len(all_contents))
+            res = await self.get_creator_answers(creator.url_token, offset, page_limit)
             if not res:
                 break
-            utils.logger.info(f"[ZhiHuClient.get_all_anwser_by_creator] Get creator {creator.url_token} answers: {res}")
+            utils.logger.info(
+                f"[ZhiHuClient.get_all_anwser_by_creator] "
+                f"Get creator {creator.url_token} answers: {res}"
+            )
             paging_info = res.get("paging", {})
             is_end = paging_info.get("is_end")
             contents = self._extractor.extract_content_list_from_creator(res.get("data"))
+            remaining = max_contents - len(all_contents)
+            contents = contents[:remaining]
             if callback:
                 await callback(contents)
             all_contents.extend(contents)
-            offset += limit
+            offset += page_limit
             await asyncio.sleep(crawl_interval)
         return all_contents
 

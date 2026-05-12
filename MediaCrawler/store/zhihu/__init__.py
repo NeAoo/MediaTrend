@@ -81,7 +81,12 @@ async def update_zhihu_content(content_item: ZhihuContent):
     content_item.source_keyword = source_keyword_var.get()
     local_db_item = content_item.model_dump()
     local_db_item.update({"last_modify_ts": utils.get_current_timestamp()})
-    utils.logger.info(f"[store.zhihu.update_zhihu_content] zhihu content: {local_db_item}")
+    utils.logger.info(
+        f"[store.zhihu.update_zhihu_content] zhihu content: "
+        f"content_id={local_db_item.get('content_id')}, "
+        f"type={local_db_item.get('content_type')}, "
+        f"title={local_db_item.get('title')}"
+    )
     await ZhihuStoreFactory.create_store().store_content(local_db_item)
 
 

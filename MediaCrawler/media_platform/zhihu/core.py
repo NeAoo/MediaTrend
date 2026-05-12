@@ -178,8 +178,14 @@ class ZhihuCrawler(AbstractCrawler):
                             page=page,
                         )
                     )
+                    content_ids = [
+                        content.content_id
+                        for content in content_list
+                        if getattr(content, "content_id", None)
+                    ]
                     utils.logger.info(
-                        f"[ZhihuCrawler.search] Search contents :{content_list}"
+                        f"[ZhihuCrawler.search] Search contents: "
+                        f"count={len(content_list)}, content_ids={content_ids}"
                     )
                     if not content_list:
                         utils.logger.info("No more content!")

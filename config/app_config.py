@@ -7,7 +7,7 @@ import yaml
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SUPPORTED_SOURCES = {"wechat_mp", "xiaohongshu", "zhihu"}
+SUPPORTED_SOURCES = {"wechat", "wechat_mp", "xiaohongshu", "zhihu", "google_news"}
 LoginType = Literal["qrcode", "cookie", "phone"]
 BrowserMode = Literal["auto", "visible", "headless"]
 
@@ -44,18 +44,6 @@ class RhythmConfig(BaseModel):
     account_delay_seconds: float = Field(8.0, ge=0)
 
 
-class WechatMpConfig(BaseModel):
-    accounts: list[str] = Field(default_factory=list)
-    max_articles_per_account: int = Field(10, ge=1)
-    lookback_days: int = Field(7, ge=1)
-    login_timeout_seconds: int = Field(180, ge=30)
-    browser_mode: BrowserMode = "auto"
-    fetch_detail_page: bool = True
-    raw_output_dir: str = "./raw_data/wechat_mp"
-    storage_state: str = "./browser_data/wechat_mp_state.json"
-    rhythm: RhythmConfig = Field(default_factory=RhythmConfig)
-
-
 class MediaCrawlerConfig(BaseModel):
     dir: str = "./MediaCrawler"
     python_bin: str = ""
@@ -64,10 +52,63 @@ class MediaCrawlerConfig(BaseModel):
     login_type: LoginType = "qrcode"
 
 
-class KeywordSourceConfig(BaseModel):
+class KeywordSearchConfig(BaseModel):
     keywords: list[str] = Field(default_factory=list)
     max_results_per_keyword: int = Field(20, ge=1)
+    time_range_hours: TimeRangeConfig = Field(default_factory=TimeRangeConfig)
+
+
+class WechatKeywordSearchConfig(KeywordSearchConfig):
+    max_results_per_keyword: int = Field(8, ge=1)
+    use_playwright: bool = True
+    fetch_detail_page: bool = False
+
+
+class WechatAccountCrawlConfig(BaseModel):
+    accounts: list[str] = Field(default_factory=list)
+    max_results_per_account: int = Field(10, ge=1)
+    time_range_hours: TimeRangeConfig = Field(
+        default_factory=lambda: TimeRangeConfig(min=0, max=168)
+    )
+    login_timeout_seconds: int = Field(180, ge=30)
+    browser_mode: BrowserMode = "auto"
+    fetch_detail_page: bool = True
+    raw_output_dir: str = "./raw_data/wechat_mp"
+    storage_state: str = "./browser_data/wechat_mp_state.json"
+    rhythm: RhythmConfig = Field(default_factory=RhythmConfig)
+
+
+class CreatorAccountCrawlConfig(BaseModel):
+    creator_urls: list[str] = Field(default_factory=list)
+    max_results_per_account: int = Field(20, ge=1)
+    time_range_hours: TimeRangeConfig = Field(
+        default_factory=lambda: TimeRangeConfig(min=0, max=168)
+    )
+
+
+class WechatConfig(BaseModel):
+    keyword_search: WechatKeywordSearchConfig = Field(
+        default_factory=WechatKeywordSearchConfig
+    )
+    account_crawl: WechatAccountCrawlConfig = Field(
+        default_factory=WechatAccountCrawlConfig
+    )
+
+
+class CreatorSourceConfig(BaseModel):
+    keyword_search: KeywordSearchConfig = Field(default_factory=KeywordSearchConfig)
+    account_crawl: CreatorAccountCrawlConfig = Field(
+        default_factory=CreatorAccountCrawlConfig
+    )
     login_type: LoginType = "qrcode"
+
+
+class GoogleNewsConfig(BaseModel):
+    keywords: list[str] = Field(default_factory=list)
+    max_results_per_keyword: int = Field(20, ge=1)
+    period: str = "7d"
+    language: str = "zh-CN"
+    country: str = "CN"
 
 
 class OutputConfig(BaseModel):
@@ -85,10 +126,11 @@ class AppConfig(BaseModel):
     )
     collection: CollectionConfig = Field(default_factory=CollectionConfig)
     selection: SelectionConfig = Field(default_factory=SelectionConfig)
-    wechat_mp: WechatMpConfig = Field(default_factory=WechatMpConfig)
+    wechat: WechatConfig = Field(default_factory=WechatConfig)
     media_crawler: MediaCrawlerConfig = Field(default_factory=MediaCrawlerConfig)
-    xiaohongshu: KeywordSourceConfig = Field(default_factory=KeywordSourceConfig)
-    zhihu: KeywordSourceConfig = Field(default_factory=KeywordSourceConfig)
+    xiaohongshu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
+    zhihu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
+    google_news: GoogleNewsConfig = Field(default_factory=GoogleNewsConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
 
     @model_validator(mode="after")
@@ -102,12 +144,38 @@ class AppConfig(BaseModel):
                 f"{', '.join(unsupported)}. Supported sources: "
                 f"{', '.join(sorted(SUPPORTED_SOURCES))}"
             )
-        if "wechat_mp" in self.enabled_sources and not self.wechat_mp.accounts:
-            raise ValueError("wechat_mp enabled but wechat_mp.accounts is empty")
-        if "xiaohongshu" in self.enabled_sources and not self.xiaohongshu.keywords:
-            raise ValueError("xiaohongshu enabled but xiaohongshu.keywords is empty")
-        if "zhihu" in self.enabled_sources and not self.zhihu.keywords:
-            raise ValueError("zhihu enabled but zhihu.keywords is empty")
+        if "wechat" in self.enabled_sources and not self.wechat.keyword_search.keywords:
+            raise ValueError(
+                "wechat enabled but wechat.keyword_search.keywords is empty"
+            )
+        if (
+            "wechat_mp" in self.enabled_sources
+            and not self.wechat.account_crawl.accounts
+        ):
+            raise ValueError(
+                "wechat_mp enabled but wechat.account_crawl.accounts is empty"
+            )
+        if (
+            "xiaohongshu" in self.enabled_sources
+            and not self.xiaohongshu.keyword_search.keywords
+            and not self.xiaohongshu.account_crawl.creator_urls
+        ):
+            raise ValueError(
+                "xiaohongshu enabled but both "
+                "xiaohongshu.keyword_search.keywords and "
+                "xiaohongshu.account_crawl.creator_urls are empty"
+            )
+        if (
+            "zhihu" in self.enabled_sources
+            and not self.zhihu.keyword_search.keywords
+            and not self.zhihu.account_crawl.creator_urls
+        ):
+            raise ValueError(
+                "zhihu enabled but both zhihu.keyword_search.keywords and "
+                "zhihu.account_crawl.creator_urls are empty"
+            )
+        if "google_news" in self.enabled_sources and not self.google_news.keywords:
+            raise ValueError("google_news enabled but google_news.keywords is empty")
         return self
 
     def resolve_path(self, value: str) -> Path:
