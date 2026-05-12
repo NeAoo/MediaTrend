@@ -41,11 +41,15 @@ browser_data/
 
 # 环境变量（包含敏感信息）
 .env
+config.yaml
 
 # 临时文件
 nul
 *.html
 .DS_Store
+
+# 外置第三方依赖
+third_party/
 
 # 运行时输出
 merged_data/*

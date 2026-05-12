@@ -18,18 +18,26 @@ from config.settings import (
     WECHAT_MP_ACCOUNT_DELAY_SECONDS,
     WECHAT_MP_ACTION_DELAY_SECONDS,
     WECHAT_MP_ARTICLE_DELAY_SECONDS,
+    WECHAT_MP_BROWSER_MODE,
     WECHAT_MP_FETCH_DETAIL_PAGE,
-    WECHAT_MP_HEADLESS,
     WECHAT_MP_LOGIN_TIMEOUT_SECONDS,
-    WECHAT_MP_LOOKBACK_DAYS,
     WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT,
     WECHAT_MP_PAGE_DELAY_SECONDS,
     WECHAT_MP_RAW_OUTPUT_DIR,
     WECHAT_MP_SLOW_MO_MS,
     WECHAT_MP_STORAGE_STATE,
+    WECHAT_MP_TIME_RANGE_HOURS,
 )
 from crawlers.base import BaseCrawler
 from models.hotspot import CollectionResult, EducationHotspot
+
+
+def resolve_wechat_mp_headless(browser_mode: str, storage_state_path: Path) -> bool:
+    if browser_mode == "visible":
+        return False
+    if browser_mode == "headless":
+        return True
+    return storage_state_path.exists()
 
 
 class WechatMpCrawler(BaseCrawler):
@@ -42,6 +50,7 @@ class WechatMpCrawler(BaseCrawler):
 
     def collect(self, keywords: List[str] | None = None, time_range_hours: tuple = None) -> CollectionResult:
         accounts = keywords or WECHAT_MP_ACCOUNTS
+        selected_time_range = time_range_hours or WECHAT_MP_TIME_RANGE_HOURS
         result = CollectionResult()
 
         if not accounts:
@@ -51,10 +60,16 @@ class WechatMpCrawler(BaseCrawler):
         logger.info("开始从微信公众号后台采集固定公众号文章...")
         logger.info(f"公众号列表: {', '.join(accounts)}")
         logger.info(f"每个公众号最多采集: {WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT} 篇")
-        logger.info(f"时间范围: 最近 {WECHAT_MP_LOOKBACK_DAYS} 天")
+        logger.info(
+            f"时间范围: {selected_time_range[0]}-{selected_time_range[1]} 小时"
+        )
+        headless = resolve_wechat_mp_headless(
+            WECHAT_MP_BROWSER_MODE,
+            self.storage_state_path,
+        )
         logger.info(
             "浏览器模式: "
-            f"{'headless' if WECHAT_MP_HEADLESS else '可见'}；"
+            f"{WECHAT_MP_BROWSER_MODE} -> {'headless' if headless else '可见'}；"
             f"slow_mo={WECHAT_MP_SLOW_MO_MS}ms；"
             f"操作延迟≈{WECHAT_MP_ACTION_DELAY_SECONDS}s，"
             f"文章延迟≈{WECHAT_MP_ARTICLE_DELAY_SECONDS}s，"
@@ -62,10 +77,42 @@ class WechatMpCrawler(BaseCrawler):
             f"公众号间隔≈{WECHAT_MP_ACCOUNT_DELAY_SECONDS}s"
         )
 
+        result = self._collect_with_browser(
+            accounts=accounts,
+            headless=headless,
+            time_range_hours=selected_time_range,
+        )
+        if (
+            not result.items
+            and result.error_messages
+            and headless
+            and WECHAT_MP_BROWSER_MODE == "auto"
+        ):
+            logger.warning("微信公众平台登录态不可用，切换为可见浏览器重新扫码")
+            result = self._collect_with_browser(
+                accounts=accounts,
+                headless=False,
+                time_range_hours=selected_time_range,
+            )
+
+        if result.items:
+            result.items.sort(key=lambda item: item.publish_time, reverse=True)
+            self._save_grouped_raw_data(result.items, selected_time_range)
+
+        return result
+
+    def _collect_with_browser(
+        self,
+        accounts: List[str],
+        headless: bool,
+        time_range_hours: tuple[int, int],
+    ) -> CollectionResult:
+        result = CollectionResult()
+        browser = None
         try:
             with sync_playwright() as playwright:
                 browser = playwright.chromium.launch(
-                    headless=WECHAT_MP_HEADLESS,
+                    headless=headless,
                     slow_mo=WECHAT_MP_SLOW_MO_MS,
                 )
                 context_options = {"no_viewport": True}
@@ -84,7 +131,13 @@ class WechatMpCrawler(BaseCrawler):
                     try:
                         if account_index > 0:
                             self._pause(page, WECHAT_MP_ACCOUNT_DELAY_SECONDS)
-                        items = self._collect_account(context, page, token, account)
+                        items = self._collect_account(
+                            context,
+                            page,
+                            token,
+                            account,
+                            time_range_hours,
+                        )
                         result.items.extend(items)
                         result.success_count += len(items)
                         logger.info(f"{account} 采集完成: {len(items)} 篇")
@@ -94,13 +147,16 @@ class WechatMpCrawler(BaseCrawler):
 
                 context.storage_state(path=str(self.storage_state_path))
                 browser.close()
+                browser = None
         except Exception as exc:
             logger.error(f"微信公众号后台采集异常: {exc}", exc_info=True)
             result.error_messages.append(str(exc))
-
-        if result.items:
-            result.items.sort(key=lambda item: item.publish_time, reverse=True)
-            self._save_grouped_raw_data(result.items)
+        finally:
+            if browser is not None:
+                try:
+                    browser.close()
+                except Exception:
+                    pass
 
         return result
 
@@ -153,6 +209,7 @@ class WechatMpCrawler(BaseCrawler):
         page: Page,
         token: str,
         account: str,
+        time_range_hours: tuple[int, int],
     ) -> list[EducationHotspot]:
         self._open_account_article_picker(page, token, account)
 
@@ -181,7 +238,7 @@ class WechatMpCrawler(BaseCrawler):
                     continue
 
                 publish_time = raw_item["publish_time"]
-                if not self._within_lookback_days(publish_time):
+                if not self._within_time_range(publish_time, time_range_hours):
                     continue
 
                 saw_recent_article = True
@@ -377,8 +434,16 @@ class WechatMpCrawler(BaseCrawler):
 
         time.sleep(duration)
 
-    def _within_lookback_days(self, publish_time: datetime) -> bool:
-        return datetime.now() - publish_time <= timedelta(days=WECHAT_MP_LOOKBACK_DAYS)
+    def _within_time_range(
+        self,
+        publish_time: datetime,
+        time_range_hours: tuple[int, int],
+    ) -> bool:
+        return self.validate_time_range(
+            publish_time,
+            time_range_hours[0],
+            time_range_hours[1],
+        )
 
     def _parse_publish_time(self, raw: str) -> datetime:
         text = raw.strip()
@@ -411,7 +476,11 @@ class WechatMpCrawler(BaseCrawler):
         token_values = parse_qs(parsed.query).get("token")
         return token_values[0] if token_values else None
 
-    def _save_grouped_raw_data(self, items: list[EducationHotspot]) -> None:
+    def _save_grouped_raw_data(
+        self,
+        items: list[EducationHotspot],
+        time_range_hours: tuple[int, int],
+    ) -> None:
         date_label = datetime.now().strftime("%Y-%m-%d")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         day_dir = self.raw_output_dir / date_label
@@ -423,13 +492,13 @@ class WechatMpCrawler(BaseCrawler):
             grouped.setdefault(account, []).append(item)
 
         summary_payload = {
-            "metadata": {
-                "generated_at": datetime.now().isoformat(),
-                "source": "wechat_mp",
-                "lookback_days": WECHAT_MP_LOOKBACK_DAYS,
-                "max_articles_per_account": WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT,
-                "total_count": len(items),
-                "accounts": list(grouped.keys()),
+                "metadata": {
+                    "generated_at": datetime.now().isoformat(),
+                    "source": "wechat_mp",
+                    "time_range_hours": list(time_range_hours),
+                    "max_results_per_account": WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT,
+                    "total_count": len(items),
+                    "accounts": list(grouped.keys()),
             },
             "accounts": {},
         }
@@ -443,8 +512,8 @@ class WechatMpCrawler(BaseCrawler):
                     "generated_at": datetime.now().isoformat(),
                     "source": "wechat_mp",
                     "account": account,
-                    "lookback_days": WECHAT_MP_LOOKBACK_DAYS,
-                    "max_articles_per_account": WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT,
+                    "time_range_hours": list(time_range_hours),
+                    "max_results_per_account": WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT,
                     "total_count": len(articles),
                 },
                 "articles": articles,

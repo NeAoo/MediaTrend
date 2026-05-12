@@ -4,7 +4,6 @@
 """
 
 import argparse
-from pathlib import Path
 import random
 
 from loguru import logger
@@ -13,8 +12,11 @@ from config.settings import (
     ENABLED_SOURCES,
     LLM_API_KEY,
     LONGXIA_CANDIDATE_EXPORT_ENABLED,
+    LOG_COMPRESSION,
     LOG_FILE,
     LOG_LEVEL,
+    LOG_RETENTION,
+    LOG_ROTATION,
     SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES,
     SCHEDULE_TIME,
     TOP_N_SELECT_COUNT,
@@ -28,9 +30,6 @@ from scorers.scorer import ContentScorer
 
 def setup_logger() -> None:
     """配置日志输出。"""
-    log_path = Path(LOG_FILE)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-
     logger.remove()
     logger.add(
         lambda msg: print(msg, end=""),
@@ -45,8 +44,9 @@ def setup_logger() -> None:
         LOG_FILE,
         level=LOG_LEVEL,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}",
-        rotation="10 MB",
-        retention="30 days",
+        rotation=LOG_ROTATION,
+        retention=LOG_RETENTION,
+        compression=LOG_COMPRESSION,
         encoding="utf-8",
     )
 
