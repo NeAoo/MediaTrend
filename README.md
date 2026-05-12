@@ -1,14 +1,50 @@
 # AITrend
 
-教育热点采集与分析工具。支持按关键词和明确账号采集多平台内容，调用 OpenAI 兼容模型评分，最后生成本地 Markdown 报告。
+<p align="center">
+  <img src="docs/assets/aitrend-hero-web.png" alt="AITrend keyword and account based trend collection workflow" width="100%">
+</p>
 
-## 数据源
+AITrend 是一个面向内容研究、教育行业观察和选题监控的趋势采集工具。它不是通用爬虫框架，而是把“关键词搜索”和“指定账号追踪”放进同一个可配置工作流里，采集后继续完成去重、AI 打分、Top N 筛选和 Markdown 报告生成。
 
-- `wechat`：搜狗微信关键词搜索，读取 `wechat.keyword_search`。
-- `wechat_mp`：微信公众平台后台，按指定公众号账号抓取，读取 `wechat.account_crawl`。
-- `xiaohongshu`：通过 `TrendCrawlerRuntime` 做小红书关键词搜索和账号主页抓取。
-- `zhihu`：通过 `TrendCrawlerRuntime` 做知乎关键词搜索和用户主页抓取。
-- `google_news`：通过 Google News RSS 做通用关键词搜索。
+如果你每天都要看固定公众号、小红书账号、知乎用户，同时又要监控一组关键词，AITrend 的目标是把这些动作合成一次稳定运行。
+
+## 核心特点
+
+- **关键词 + 账号双模式**：同一份 `config.yaml` 同时管理关键词搜索和固定账号抓取。
+- **面向趋势报告**：采集不是终点，后续会合并、去重、AI 打分、筛选并输出 Markdown 日报。
+- **多平台输入**：支持微信关键词、微信公众号账号、小红书关键词/账号、知乎关键词/账号、Google News 关键词。
+- **配置优先迁移**：业务配置放在 `config.yaml`，密钥和机器差异放在 `.env`，对外发布仓库只提交模板。
+- **可先只采集**：`python main.py search` 不调用大模型，适合先验证登录和数据源。
+- **适合个人和小团队**：不要求先搭分布式平台，不需要为了一个日报任务引入复杂调度系统。
+
+## 支持的数据源
+
+| source | 入口 | 输入类型 | 典型用途 |
+| --- | --- | --- | --- |
+| `wechat` | 搜狗微信 | 关键词 | 搜索公众号文章结果 |
+| `wechat_mp` | 微信公众平台后台 | 公众号名称 | 追踪固定公众号账号 |
+| `xiaohongshu` | TrendCrawlerRuntime | 关键词、账号主页 URL | 监控小红书话题和指定创作者 |
+| `zhihu` | TrendCrawlerRuntime | 关键词、用户主页 URL | 监控知乎话题和指定用户 |
+| `google_news` | Google News RSS | 关键词 | 通用新闻关键词补充 |
+
+账号采集的边界要分清：
+
+- 微信公众号账号：填公众号名称。
+- 小红书账号：填账号主页 URL，不是昵称关键词。
+- 知乎账号：填用户主页 URL，不是昵称关键词。
+
+## 和常见开源爬虫项目的区别
+
+AITrend 不试图替代 [TrendCrawlerRuntime](https://internal.local/TrendCrawlerRuntime)、[Scrapy](https://docs.scrapy.org/) 或 [Crawlab](https://github.com/crawlab-team/crawlab)。它的价值在更靠近“每天要产出一份可读趋势报告”的业务层。
+
+| 项目类型 | 主要强项 | AITrend 的区别 |
+| --- | --- | --- |
+| TrendCrawlerRuntime | 多平台自媒体公开内容采集，平台覆盖广 | AITrend 把 TrendCrawlerRuntime 作为小红书/知乎采集能力的一部分，并在外层补上关键词 + 指定账号配置、统一合并、AI 打分和报告输出 |
+| Scrapy | 通用爬虫框架，适合开发自定义 spider | AITrend 是可运行应用，不要求用户从 spider、pipeline、item export 开始搭一套系统 |
+| Crawlab | 分布式爬虫管理平台，适合管理多语言、多任务爬虫 | AITrend 更轻，重点是单仓库配置化运行和内容分析产物，不需要先部署管理平台 |
+| 单一搜索脚本 | 快速抓某个平台某个关键词 | AITrend 把关键词监控和账号追踪放在同一矩阵里，并统一进入下游评分和日报 |
+
+一句话：很多开源项目解决“怎么抓”，AITrend 更关注“每天该看哪些账号和关键词，抓完后如何变成可读的趋势判断”。
 
 ## 快速开始
 
@@ -27,7 +63,7 @@ python scripts/bootstrap.py
 - `.env.example` -> `.env`
 - `config.yaml.example` -> `config.yaml`
 
-创建后再填写自己的密钥和采集配置：
+创建后填写自己的密钥和采集配置：
 
 ```bash
 $EDITOR .env
@@ -44,6 +80,12 @@ python main.py search
 
 ```bash
 python main.py run
+```
+
+定时模式：
+
+```bash
+python main.py start
 ```
 
 ## 配置文件
@@ -68,6 +110,75 @@ XIAOHONGSHU_COOKIE=
 ZHIHU_COOKIE=
 GOOGLE_NEWS_PROXY_URL=
 LOG_LEVEL=INFO
+```
+
+一个最小的微信公众号账号配置：
+
+```yaml
+enabled_sources:
+  - wechat_mp
+
+wechat:
+  account_crawl:
+    accounts:
+      - 中国教育报
+      - 人民教育
+    max_results_per_account: 10
+    time_range_hours:
+      min: 0
+      max: 168
+```
+
+小红书和知乎如果要启用账号模式，需要填主页 URL：
+
+```yaml
+enabled_sources:
+  - xiaohongshu
+  - zhihu
+
+xiaohongshu:
+  account_crawl:
+    creator_urls:
+      - https://www.xiaohongshu.com/user/profile/USER_ID?xsec_token=TOKEN&xsec_source=pc_search
+
+zhihu:
+  account_crawl:
+    creator_urls:
+      - https://www.zhihu.com/people/URL_TOKEN
+```
+
+## 常用命令
+
+临时指定数据源：
+
+```bash
+python main.py search --sources wechat_mp
+python main.py search --sources wechat,google_news
+python main.py search --sources xiaohongshu,zhihu
+```
+
+临时覆盖关键词或公众号账号：
+
+```bash
+python main.py search --sources wechat,google_news --keywords 教育改革,中考
+python main.py search --sources wechat_mp --keywords 中国教育报,人民教育
+python main.py search --sources xiaohongshu,zhihu --keywords 中考,高考
+```
+
+单源脚本：
+
+```bash
+python scripts/search_wechat_mp.py -a 中国教育报,人民教育
+python scripts/search_google_news.py -k 教育改革,中考
+python scripts/search_xiaohongshu.py --mode both -k 教育改革 -c 'https://www.xiaohongshu.com/user/profile/USER_ID?xsec_token=TOKEN&xsec_source=pc_search'
+python scripts/search_zhihu.py --mode both -k 教育改革 -c 'https://www.zhihu.com/people/URL_TOKEN'
+```
+
+账号主页快捷脚本：
+
+```bash
+python scripts/search_xiaohongshu_creator.py -c 'https://www.xiaohongshu.com/user/profile/USER_ID?xsec_token=TOKEN&xsec_source=pc_search'
+python scripts/search_zhihu_creator.py -c 'https://www.zhihu.com/people/URL_TOKEN'
 ```
 
 ## 依赖文件
@@ -105,38 +216,6 @@ trend_crawler_runtime:
 
 然后自行把兼容的 TrendCrawlerRuntime checkout 放到该目录。注意：小红书和知乎账号抓取依赖当前仓库对 creator 参数和输出文件的适配，不能随便换成未适配版本。
 
-## 常用运行方式
-
-临时指定数据源：
-
-```bash
-python main.py search --sources wechat_mp
-python main.py search --sources wechat,google_news
-python main.py search --sources xiaohongshu,zhihu
-```
-
-临时覆盖关键词或公众号账号：
-
-```bash
-python main.py search --sources wechat,google_news --keywords 教育改革,中考
-python main.py search --sources wechat_mp --keywords 中国教育报,人民教育
-python main.py search --sources xiaohongshu,zhihu --keywords 中考,高考
-```
-
-小红书和知乎账号主页采集：
-
-```bash
-python scripts/search_xiaohongshu_creator.py -c 'https://www.xiaohongshu.com/user/profile/USER_ID?xsec_token=TOKEN&xsec_source=pc_search'
-python scripts/search_zhihu_creator.py -c 'https://www.zhihu.com/people/yd1234567'
-```
-
-同一个单源脚本也支持指定模式：
-
-```bash
-python scripts/search_xiaohongshu.py --mode accounts -c 'https://www.xiaohongshu.com/user/profile/USER_ID?xsec_token=TOKEN&xsec_source=pc_search'
-python scripts/search_zhihu.py --mode both -k 教育改革,中考 -c 'https://www.zhihu.com/people/yd1234567'
-```
-
 ## 登录态
 
 登录态是本机运行状态，不提交到 Git。
@@ -145,15 +224,19 @@ python scripts/search_zhihu.py --mode both -k 教育改革,中考 -c 'https://ww
 - `xiaohongshu` 和 `zhihu` 默认 `login_type: qrcode`，首次运行由 `TrendCrawlerRuntime` 打开登录流程。
 - Cookie 登录保留为高级选项，只有把平台 `login_type` 改成 `cookie` 时才需要填写 `.env` 中的 Cookie。
 
-账号采集的输入边界：
+## 输出
 
-- 微信公众号账号：填公众号名称。
-- 小红书账号：填账号主页 URL，不是昵称关键词。
-- 知乎账号：填用户主页 URL，不是昵称关键词。
+运行后常见产物：
 
-## 运行目录
+```text
+raw_data/       # 各平台原始采集结果
+merged_data/    # 多源合并后的统一 JSON
+scored_data/    # AI 打分后的数据
+output/         # Markdown 日报
+logs/           # 运行日志
+```
 
-这些目录是运行时产物，默认不进 Git：
+运行态目录默认不进 Git：
 
 ```text
 browser_data/
@@ -171,3 +254,7 @@ logs/
 ```bash
 python -m pytest -q tests
 ```
+
+## 合规提醒
+
+请只采集合规可访问的数据，遵守目标平台的服务条款、频率限制和当地法律法规。AITrend 提供的是个人研究和内部分析工作流，不应被用于绕过权限、批量骚扰或侵害他人权益。
