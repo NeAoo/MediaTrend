@@ -157,7 +157,7 @@ google_news:
 output:
   dir: ./output
   filename_pattern: 教育热点日报_{date}.md
-  # 默认关闭 longxia 导出，开源用户不需要这条内部链路。
+  # 默认关闭私有候选导出，开源用户通常不需要这条内部链路。
   longxia_candidate_export_enabled: false
   longxia_candidate_export_dir: ./output/longxia_trend_candidates
   longxia_candidate_content_max_chars: 5000

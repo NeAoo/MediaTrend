@@ -286,7 +286,7 @@ OUTPUT_DIR = str(APP_CONFIG.resolve_path(APP_CONFIG.output.dir))
 OUTPUT_FILENAME_PATTERN = APP_CONFIG.output.filename_pattern
 OUTPUT_FORMAT = "markdown"
 
-# ==================== longxia 候选投放配置（默认关闭） ====================
+# ==================== 私有候选投放配置（默认关闭） ====================
 LONGXIA_CANDIDATE_EXPORT_ENABLED = (
     APP_CONFIG.output.longxia_candidate_export_enabled
 )
@@ -297,14 +297,8 @@ LONGXIA_CANDIDATE_CONTENT_MAX_CHARS = (
     APP_CONFIG.output.longxia_candidate_content_max_chars
 )
 LONGXIA_CANDIDATE_TIMEZONE = APP_CONFIG.output.longxia_candidate_timezone
-LONGXIA_SSH_TARGET = os.getenv("LONGXIA_SSH_TARGET", "longxia").strip() or "longxia"
-LONGXIA_REMOTE_CANDIDATE_ROOT = (
-    os.getenv(
-        "LONGXIA_REMOTE_CANDIDATE_ROOT",
-        "/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/trend_candidates",
-    ).strip()
-    or "/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/trend_candidates"
-)
+LONGXIA_SSH_TARGET = os.getenv("LONGXIA_SSH_TARGET", "").strip()
+LONGXIA_REMOTE_CANDIDATE_ROOT = os.getenv("LONGXIA_REMOTE_CANDIDATE_ROOT", "").strip()
 
 # ==================== 调度配置 ====================
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "08:00").strip() or "08:00"

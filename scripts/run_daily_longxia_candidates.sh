@@ -17,6 +17,15 @@ log() {
   echo "[$(timestamp)] $*"
 }
 
+require_env() {
+  local name="$1"
+  local value="${!name:-}"
+  if [ -z "${value}" ]; then
+    log "error: ${name} must be set in .env or environment for private remote upload"
+    exit 1
+  fi
+}
+
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
   log "skip: previous local longxia candidate job still active" | tee -a "${JOB_LOG_FILE}"
   exit 0
@@ -39,9 +48,9 @@ fi
 export TZ="${LONGXIA_CANDIDATE_TIMEZONE:-Asia/Shanghai}"
 
 PYTHON_BIN="${PYTHON_BIN:-${PROJECT_DIR}/.venv/bin/python}"
-LONGXIA_SSH_TARGET="${LONGXIA_SSH_TARGET:-longxia}"
-LONGXIA_REMOTE_CANDIDATE_ROOT="${LONGXIA_REMOTE_CANDIDATE_ROOT:-/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/trend_candidates}"
-LONGXIA_REMOTE_SCORED_ROOT="${LONGXIA_REMOTE_SCORED_ROOT:-/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/external_reference_scored_data}"
+LONGXIA_SSH_TARGET="${LONGXIA_SSH_TARGET:-}"
+LONGXIA_REMOTE_CANDIDATE_ROOT="${LONGXIA_REMOTE_CANDIDATE_ROOT:-}"
+LONGXIA_REMOTE_SCORED_ROOT="${LONGXIA_REMOTE_SCORED_ROOT:-}"
 LONGXIA_CANDIDATE_EXPORT_DIR="${LONGXIA_CANDIDATE_EXPORT_DIR:-${PROJECT_DIR}/output/longxia_trend_candidates}"
 LONGXIA_SCORED_DATA_DIR="${LONGXIA_SCORED_DATA_DIR:-${PROJECT_DIR}/scored_data}"
 
@@ -49,6 +58,9 @@ LONGXIA_SCORED_DATA_DIR="${LONGXIA_SCORED_DATA_DIR:-${PROJECT_DIR}/scored_data}"
   log "start local collection for longxia candidates"
   log "project=${PROJECT_DIR}"
   log "python=${PYTHON_BIN}"
+  require_env LONGXIA_SSH_TARGET
+  require_env LONGXIA_REMOTE_CANDIDATE_ROOT
+  require_env LONGXIA_REMOTE_SCORED_ROOT
   export PYTHONUNBUFFERED=1
 
   if [ ! -x "${PYTHON_BIN}" ]; then

@@ -17,6 +17,15 @@ log() {
   echo "[$(timestamp)] $*"
 }
 
+require_env() {
+  local name="$1"
+  local value="${!name:-}"
+  if [ -z "${value}" ]; then
+    log "error: ${name} must be set in .env or environment for private remote upload"
+    exit 1
+  fi
+}
+
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
   log "skip: previous weekly external_reference job still active" | tee -a "${JOB_LOG_FILE}"
   exit 0
@@ -39,15 +48,17 @@ fi
 export TZ="${LONGXIA_CANDIDATE_TIMEZONE:-Asia/Shanghai}"
 
 PYTHON_BIN="${PYTHON_BIN:-${PROJECT_DIR}/.venv/bin/python}"
-LONGXIA_SSH_TARGET="${LONGXIA_SSH_TARGET:-longxia}"
+LONGXIA_SSH_TARGET="${LONGXIA_SSH_TARGET:-}"
 LOCAL_OUTPUT_ROOT="${LONGXIA_WEEKLY_EXTERNAL_REFERENCE_EXPORT_DIR:-${PROJECT_DIR}/output/longxia_weekly_external_reference}"
-REMOTE_ROOT="${LONGXIA_REMOTE_EXTERNAL_REFERENCE_ROOT:-/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/external_reference_weekly}"
+REMOTE_ROOT="${LONGXIA_REMOTE_EXTERNAL_REFERENCE_ROOT:-}"
 SCORED_DIR="${LONGXIA_WEEKLY_EXTERNAL_REFERENCE_SCORED_DIR:-${PROJECT_DIR}/scored_data}"
 
 {
   log "start weekly external_reference package build"
   log "project=${PROJECT_DIR}"
   log "python=${PYTHON_BIN}"
+  require_env LONGXIA_SSH_TARGET
+  require_env LONGXIA_REMOTE_EXTERNAL_REFERENCE_ROOT
   export PYTHONUNBUFFERED=1
 
   if [ ! -x "${PYTHON_BIN}" ]; then

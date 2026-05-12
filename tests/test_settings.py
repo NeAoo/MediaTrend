@@ -132,6 +132,32 @@ wechat:
     assert settings.LOG_COMPRESSION == "zip"
 
 
+def test_settings_does_not_default_private_remote_targets(tmp_path, monkeypatch):
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+enabled_sources:
+  - wechat_mp
+wechat:
+  account_crawl:
+    accounts:
+      - 账号A
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("AI_TREND_CONFIG", str(config_file))
+    monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
+    monkeypatch.delenv("LONGXIA_SSH_TARGET", raising=False)
+    monkeypatch.delenv("LONGXIA_REMOTE_CANDIDATE_ROOT", raising=False)
+
+    import config.settings as settings
+
+    settings = importlib.reload(settings)
+
+    assert settings.LONGXIA_SSH_TARGET == ""
+    assert settings.LONGXIA_REMOTE_CANDIDATE_ROOT == ""
+
+
 def test_settings_exports_new_search_source_values(tmp_path, monkeypatch):
     config_file = tmp_path / "config.yaml"
     config_file.write_text(
