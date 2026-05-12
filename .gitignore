@@ -38,10 +38,17 @@ venv.bak/
 logs/
 *.log
 browser_data/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
 
 # 环境变量（包含敏感信息）
 .env
+.env.*
+!.env.example
 config.yaml
+config.*.yaml
 
 # 临时文件
 nul

@@ -122,7 +122,7 @@ class OutputConfig(BaseModel):
 
 class AppConfig(BaseModel):
     enabled_sources: list[str] = Field(
-        default_factory=lambda: ["wechat_mp", "xiaohongshu", "zhihu"]
+        default_factory=lambda: ["wechat_mp"]
     )
     collection: CollectionConfig = Field(default_factory=CollectionConfig)
     selection: SelectionConfig = Field(default_factory=SelectionConfig)

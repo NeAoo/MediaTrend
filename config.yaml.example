@@ -1,45 +1,74 @@
-# Copy to config.yaml and edit. config.yaml is ignored by git.
+# AITrend 业务配置模板。
+# 使用方式：复制为 config.yaml 后再填写真实配置。
+# config.yaml 是本机私有文件，不要提交到 Git；本文件可以提交。
 
+# ==================== 启用的数据源 ====================
+# 只写你本次运行真正要抓取的源。
+# wechat      = 搜狗微信关键词搜索
+# wechat_mp   = 微信公众平台后台，按指定公众号账号抓取
+# xiaohongshu = 小红书，关键词搜索 + 指定账号主页抓取
+# zhihu       = 知乎，关键词搜索 + 指定用户主页抓取
+# google_news = Google News 通用关键词搜索
 enabled_sources:
-  - wechat
   - wechat_mp
-  - xiaohongshu
-  - zhihu
-  - google_news
+  # - wechat
+  # - xiaohongshu
+  # - zhihu
+  # - google_news
 
+# ==================== 全局采集与筛选 ====================
 collection:
+  # 初始最多保留多少条进入后续去重、评分、报告链路。
   initial_collect_count: 30
+  # 全局默认时间窗口，单位：小时。平台内单独配置会覆盖这里。
   time_range_hours:
     min: 0
     max: 24
 
 selection:
+  # 最终报告选取多少条热点。
   top_n: 10
 
+# ==================== 微信 ====================
 wechat:
+  # source=wechat：搜狗微信关键词搜索。
   keyword_search:
     keywords:
       - 教育改革
       - 中考
+    # 每个关键词最多抓多少条搜索结果。
     max_results_per_keyword: 8
+    # 关键词搜索的时间窗口，单位：小时。
     time_range_hours:
       min: 0
       max: 48
+    # true = 使用 Playwright 浏览器访问搜狗微信；false = requests 直连。
     use_playwright: true
+    # true = 访问文章详情页以尝试拿更准确的发布时间；速度会更慢。
     fetch_detail_page: false
+
+  # source=wechat_mp：微信公众平台后台，按固定公众号账号抓取。
+  # 这里填公众号名称，不是关键词。
   account_crawl:
     accounts:
       - 中国教育报
       - 人民教育
+    # 每个公众号最多抓多少篇。
     max_results_per_account: 10
+    # 公众号账号抓取的时间窗口，单位：小时。
     time_range_hours:
       min: 0
       max: 168
+    # 首次扫码登录最多等待多少秒。
     login_timeout_seconds: 180
+    # auto = 有登录态走 headless，失效时自动切可见浏览器扫码。
+    # visible = 永远打开可见浏览器；headless = 永远无头运行。
     browser_mode: auto
+    # true = 打开详情页补正文和时间；速度会更慢但内容更完整。
     fetch_detail_page: true
     raw_output_dir: ./raw_data/wechat_mp
     storage_state: ./browser_data/wechat_mp_state.json
+    # 操作节奏。太快容易触发风控，开源默认保守一点。
     rhythm:
       slow_mo_ms: 300
       action_delay_seconds: 1.5
@@ -47,14 +76,24 @@ wechat:
       page_delay_seconds: 4.0
       account_delay_seconds: 8.0
 
+# ==================== TrendCrawlerRuntime 共用配置 ====================
+# 小红书和知乎通过 TrendCrawlerRuntime 执行。
+# 当前仓库保留 ./TrendCrawlerRuntime 兼容拷贝，git clone 后默认可以找到。
+# 如果你想使用外置 TrendCrawlerRuntime，把 dir 改成 ./third_party/TrendCrawlerRuntime 或绝对路径。
 trend_crawler_runtime:
-  dir: ./third_party/TrendCrawlerRuntime
+  dir: ./TrendCrawlerRuntime
+  # 留空表示使用当前 Python；也可以填绝对路径，例如 /path/to/.venv/bin/python。
   python_bin: ""
+  # 单次 TrendCrawlerRuntime 子进程最长运行时间，单位：秒。
   timeout_seconds: 900
+  # 传给 TrendCrawlerRuntime 的默认最大采集数；平台内 max_results 会覆盖实际读取上限。
   max_notes_count: 20
+  # qrcode = 扫码登录；cookie = 读 .env 里的 Cookie；phone = 手机号登录。
   login_type: qrcode
 
+# ==================== 小红书 ====================
 xiaohongshu:
+  # source=xiaohongshu：关键词搜索。
   keyword_search:
     keywords:
       - 教育改革
@@ -63,8 +102,12 @@ xiaohongshu:
     time_range_hours:
       min: 0
       max: 48
+
+  # source=xiaohongshu：指定账号主页抓取。
+  # 这里必须填账号主页 URL，不是账号昵称，也不是搜索账号名。
   account_crawl:
     creator_urls: []
+    # 示例：
     # creator_urls:
     #   - https://www.xiaohongshu.com/user/profile/<user_id>?xsec_token=<token>&xsec_source=pc_search
     max_results_per_account: 20
@@ -73,7 +116,9 @@ xiaohongshu:
       max: 168
   login_type: qrcode
 
+# ==================== 知乎 ====================
 zhihu:
+  # source=zhihu：关键词搜索。
   keyword_search:
     keywords:
       - 教育改革
@@ -82,8 +127,12 @@ zhihu:
     time_range_hours:
       min: 0
       max: 72
+
+  # source=zhihu：指定用户主页抓取。
+  # 这里必须填用户主页 URL，不是昵称关键词。
   account_crawl:
     creator_urls: []
+    # 示例：
     # creator_urls:
     #   - https://www.zhihu.com/people/<url_token>
     max_results_per_account: 20
@@ -92,18 +141,23 @@ zhihu:
       max: 168
   login_type: qrcode
 
+# ==================== Google News ====================
+# source=google_news：通用关键词搜索，不需要平台账号。
 google_news:
   keywords:
     - 教育改革
     - 中考
   max_results_per_keyword: 20
+  # Google News RSS 支持类似 1h、24h、7d、30d 的时间段。
   period: 7d
   language: zh-CN
   country: CN
 
+# ==================== 输出 ====================
 output:
   dir: ./output
   filename_pattern: 教育热点日报_{date}.md
+  # 默认关闭 longxia 导出，开源用户不需要这条内部链路。
   longxia_candidate_export_enabled: false
   longxia_candidate_export_dir: ./output/longxia_trend_candidates
   longxia_candidate_content_max_chars: 5000
