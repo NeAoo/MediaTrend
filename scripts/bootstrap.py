@@ -16,15 +16,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-RUNTIME_DIRS = [
+BASE_RUNTIME_DIRS = [
     "browser_data",
     "raw_data",
     "merged_data",
     "scored_data",
     "output",
     "logs",
-    "TrendCrawlerRuntime/browser_data",
-    "TrendCrawlerRuntime/data",
 ]
 
 CONFIG_VALIDATION_MODULES = {
@@ -131,11 +129,49 @@ def missing_config_validation_modules() -> list[str]:
     ]
 
 
+def runtime_dirs_from_config() -> list[str]:
+    trend_crawler_runtime_dir = "TrendCrawlerRuntime"
+    try:
+        from config.app_config import load_app_config
+
+        app_config = load_app_config(os.getenv("AI_TREND_CONFIG", "config.yaml"))
+        trend_crawler_runtime_path = app_config.resolve_path(app_config.trend_crawler_runtime.dir)
+        if is_relative_to(trend_crawler_runtime_path.resolve(), PROJECT_ROOT.resolve()):
+            trend_crawler_runtime_dir = str(trend_crawler_runtime_path.relative_to(PROJECT_ROOT))
+        else:
+            trend_crawler_runtime_dir = str(trend_crawler_runtime_path)
+    except Exception:
+        trend_crawler_runtime_dir = "TrendCrawlerRuntime"
+
+    return BASE_RUNTIME_DIRS + [
+        f"{trend_crawler_runtime_dir}/browser_data",
+        f"{trend_crawler_runtime_dir}/data",
+    ]
+
+
 def ensure_runtime_dirs() -> None:
-    for item in RUNTIME_DIRS:
-        path = PROJECT_ROOT / item
+    for item in runtime_dirs_from_config():
+        path = Path(item).expanduser()
+        if not path.is_absolute():
+            path = PROJECT_ROOT / path
         path.mkdir(parents=True, exist_ok=True)
-        print(f"OK: directory {item}")
+        label = path.relative_to(PROJECT_ROOT) if is_relative_to(path, PROJECT_ROOT) else path
+        print(f"OK: directory {label}")
+
+
+def trend_crawler_runtime_dir_from_config() -> Path:
+    from config.app_config import load_app_config
+
+    app_config = load_app_config(os.getenv("AI_TREND_CONFIG", "config.yaml"))
+    return app_config.resolve_path(app_config.trend_crawler_runtime.dir)
+
+
+def has_login_state(path: Path) -> bool:
+    if path.is_file():
+        return path.stat().st_size > 0
+    if path.is_dir():
+        return any(path.iterdir())
+    return False
 
 
 def validate_required_files() -> bool:
@@ -172,13 +208,18 @@ def validate_app_config() -> bool:
 
 
 def report_login_state() -> None:
+    try:
+        trend_crawler_runtime_dir = trend_crawler_runtime_dir_from_config()
+    except Exception:
+        trend_crawler_runtime_dir = PROJECT_ROOT / "TrendCrawlerRuntime"
     checks = [
         ("wechat_mp", PROJECT_ROOT / "browser_data" / "wechat_mp_state.json"),
-        ("trendcrawler", PROJECT_ROOT / "TrendCrawlerRuntime" / "browser_data"),
+        ("trendcrawler", trend_crawler_runtime_dir / "browser_data"),
     ]
     for label, path in checks:
-        if path.exists():
-            print(f"OK: {label} login state exists at {path.relative_to(PROJECT_ROOT)}")
+        if has_login_state(path):
+            display = path.relative_to(PROJECT_ROOT) if is_relative_to(path, PROJECT_ROOT) else path
+            print(f"OK: {label} login state exists at {display}")
         else:
             print(f"INFO: {label} login state missing; first run will require QR login")
 
@@ -196,11 +237,20 @@ def main() -> int:
     ensure_runtime_dirs()
     files_ok = validate_required_files()
 
-    commands = [
-        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
-        [sys.executable, "-m", "pip", "install", "-r", "TrendCrawlerRuntime/requirements.txt"],
-        [sys.executable, "-m", "playwright", "install", "chromium"],
-    ]
+    try:
+        trend_crawler_runtime_dir = trend_crawler_runtime_dir_from_config()
+    except Exception:
+        trend_crawler_runtime_dir = PROJECT_ROOT / "TrendCrawlerRuntime"
+
+    commands = [[sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]]
+    media_requirements = trend_crawler_runtime_dir / "requirements.txt"
+    if media_requirements.exists():
+        commands.append(
+            [sys.executable, "-m", "pip", "install", "-r", str(media_requirements)]
+        )
+    else:
+        print(f"WARN: TrendCrawlerRuntime requirements not found: {media_requirements}")
+    commands.append([sys.executable, "-m", "playwright", "install", "chromium"])
     for command in commands:
         if run_command(command, check=args.check) != 0:
             return 1

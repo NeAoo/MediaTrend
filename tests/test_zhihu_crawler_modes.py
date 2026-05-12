@@ -1,0 +1,57 @@
+import importlib
+
+
+def test_zhihu_runs_search_and_creator_modes(monkeypatch):
+    module = importlib.import_module("crawlers.zhihu")
+    creator_url = "https://www.zhihu.com/people/yd1234567"
+    monkeypatch.setattr(module, "ZHIHU_CREATOR_URLS", [creator_url])
+    monkeypatch.setattr(module, "ZHIHU_MAX_RESULTS_PER_KEYWORD", 8)
+    monkeypatch.setattr(module, "ZHIHU_MAX_RESULTS_PER_ACCOUNT", 6)
+    monkeypatch.setattr(module, "ZHIHU_LOGIN_TYPE", "qrcode")
+    monkeypatch.setattr(module, "TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS", 900)
+
+    crawler = module.ZhihuCrawler()
+    commands = []
+
+    def fake_run(mode, items, max_count, time_range_hours, timeout):
+        commands.append((mode, items, max_count, time_range_hours, timeout))
+        return True
+
+    monkeypatch.setattr(crawler, "_run_trendcrawler", fake_run)
+    monkeypatch.setattr(crawler, "_load_and_convert_data", lambda *args, **kwargs: [])
+
+    result = crawler.collect(
+        ["教育改革"],
+        time_range_hours=(0, 24),
+        creator_time_range_hours=(0, 168),
+    )
+
+    assert result.success_count == 0
+    assert commands == [
+        ("search", ["教育改革"], 8, 24, 900),
+        ("creator", [creator_url], 6, 168, 900),
+    ]
+
+
+def test_zhihu_accepts_creator_url_override(monkeypatch):
+    module = importlib.import_module("crawlers.zhihu")
+    creator_url = "https://www.zhihu.com/people/override"
+    monkeypatch.setattr(module, "ZHIHU_CREATOR_URLS", [])
+    monkeypatch.setattr(module, "ZHIHU_MAX_RESULTS_PER_ACCOUNT", 6)
+    monkeypatch.setattr(module, "ZHIHU_LOGIN_TYPE", "qrcode")
+    monkeypatch.setattr(module, "TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS", 900)
+
+    crawler = module.ZhihuCrawler()
+    commands = []
+
+    def fake_run(mode, items, max_count, time_range_hours, timeout):
+        commands.append((mode, items, max_count, time_range_hours, timeout))
+        return True
+
+    monkeypatch.setattr(crawler, "_run_trendcrawler", fake_run)
+    monkeypatch.setattr(crawler, "_load_and_convert_data", lambda *args, **kwargs: [])
+
+    result = crawler.collect([], time_range_hours=(0, 24), creator_urls=[creator_url])
+
+    assert result.success_count == 0
+    assert commands == [("creator", [creator_url], 6, 24, 900)]

@@ -356,6 +356,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 config.WEIBO_CREATOR_ID_LIST = creator_id_list
             elif platform == PlatformEnum.KUAISHOU:
                 config.KS_CREATOR_ID_LIST = creator_id_list
+            elif platform == PlatformEnum.ZHIHU:
+                config.ZHIHU_CREATOR_URL_LIST = creator_id_list
 
         return SimpleNamespace(
             platform=config.PLATFORM,

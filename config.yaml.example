@@ -1,9 +1,11 @@
 # Copy to config.yaml and edit. config.yaml is ignored by git.
 
 enabled_sources:
+  - wechat
   - wechat_mp
   - xiaohongshu
   - zhihu
+  - google_news
 
 collection:
   initial_collect_count: 30
@@ -14,44 +16,90 @@ collection:
 selection:
   top_n: 10
 
-wechat_mp:
-  accounts:
-    - 中国教育报
-    - 人民教育
-  max_articles_per_account: 10
-  lookback_days: 7
-  login_timeout_seconds: 180
-  browser_mode: auto
-  fetch_detail_page: true
-  raw_output_dir: ./raw_data/wechat_mp
-  storage_state: ./browser_data/wechat_mp_state.json
-  rhythm:
-    slow_mo_ms: 300
-    action_delay_seconds: 1.5
-    article_delay_seconds: 3.0
-    page_delay_seconds: 4.0
-    account_delay_seconds: 8.0
+wechat:
+  keyword_search:
+    keywords:
+      - 教育改革
+      - 中考
+    max_results_per_keyword: 8
+    time_range_hours:
+      min: 0
+      max: 48
+    use_playwright: true
+    fetch_detail_page: false
+  account_crawl:
+    accounts:
+      - 中国教育报
+      - 人民教育
+    max_results_per_account: 10
+    time_range_hours:
+      min: 0
+      max: 168
+    login_timeout_seconds: 180
+    browser_mode: auto
+    fetch_detail_page: true
+    raw_output_dir: ./raw_data/wechat_mp
+    storage_state: ./browser_data/wechat_mp_state.json
+    rhythm:
+      slow_mo_ms: 300
+      action_delay_seconds: 1.5
+      article_delay_seconds: 3.0
+      page_delay_seconds: 4.0
+      account_delay_seconds: 8.0
 
 trend_crawler_runtime:
-  dir: ./TrendCrawlerRuntime
+  dir: ./third_party/TrendCrawlerRuntime
   python_bin: ""
   timeout_seconds: 900
   max_notes_count: 20
   login_type: qrcode
 
 xiaohongshu:
-  keywords:
-    - 教育改革
-    - 中考
-  max_results_per_keyword: 20
+  keyword_search:
+    keywords:
+      - 教育改革
+      - 中考
+    max_results_per_keyword: 20
+    time_range_hours:
+      min: 0
+      max: 48
+  account_crawl:
+    creator_urls: []
+    # creator_urls:
+    #   - https://www.xiaohongshu.com/user/profile/<user_id>?xsec_token=<token>&xsec_source=pc_search
+    max_results_per_account: 20
+    time_range_hours:
+      min: 0
+      max: 168
   login_type: qrcode
 
 zhihu:
+  keyword_search:
+    keywords:
+      - 教育改革
+      - 中考
+    max_results_per_keyword: 20
+    time_range_hours:
+      min: 0
+      max: 72
+  account_crawl:
+    creator_urls: []
+    # creator_urls:
+    #   - https://www.zhihu.com/people/<url_token>
+    max_results_per_account: 20
+    time_range_hours:
+      min: 0
+      max: 168
+  login_type: qrcode
+
+google_news:
   keywords:
     - 教育改革
     - 中考
   max_results_per_keyword: 20
-  login_type: qrcode
+  period: 7d
+  language: zh-CN
+  country: CN
 
 output:
   dir: ./output

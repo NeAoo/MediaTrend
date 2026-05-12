@@ -1,0 +1,206 @@
+# AITrend 本地业务配置。
+# 这个文件只放“采集什么、抓多少、抓多久以内、输出到哪”。
+# 密钥、Cookie、代理等机器私密配置放 .env。
+
+# 当前生产任务只启用微信公众号账号抓取。
+# 只保留 wechat_mp 后，python main.py run / search 默认只会跑 wechat.account_crawl。
+# 下面其他平台配置先保留为模板，只有重新加入 enabled_sources 才会执行。
+enabled_sources:
+  - wechat_mp
+
+
+# 全局兜底配置。
+# 主要给旧代码路径和没有独立时间窗口的 source 使用。
+# 下面每个平台自己的 keyword_search/account_crawl 时间窗口优先级更高。
+collection:
+  initial_collect_count: 30
+  time_range_hours:
+    min: 0
+    max: 24
+
+# 最终日报/候选内容筛选数量。
+selection:
+  top_n: 10
+
+
+# ==================== 微信 ====================
+# 微信拆成两条完全不同的链路：
+# 1. keyword_search: 微信关键词搜索，走搜狗微信，输入“关键词”
+# 2. account_crawl: 微信公众号账号抓取，走微信公众平台后台，输入“公众号名称/微信号”
+wechat:
+  # 微信关键词搜索：搜“教育改革/中考/小学英语”这类词。
+  # 结果来自搜狗微信全站搜索，不保证属于某个固定公众号。
+  keyword_search:
+    keywords:
+      - 教育改革
+      - 中考
+      - 小学英语
+      - 家庭教育
+    # 每个关键词最多保留多少条搜索结果。
+    max_results_per_keyword: 8
+    # 只保留发布时间在这个范围内的文章，单位：小时。
+    # min=0, max=48 表示最近 48 小时。
+    time_range_hours:
+      min: 0
+      max: 48
+    # true 时用 Playwright 打开搜狗页面，抗反爬更强但更慢。
+    use_playwright: true
+    # true 时会进入文章详情页补正文/时间；更准但更慢。
+    fetch_detail_page: false
+
+  # 微信公众号账号抓取：抓指定公众号最近文章。
+  # 填公众号名称或微信号，不填关键词。
+  # 这条链路需要登录 mp.weixin.qq.com，首次运行通常需要扫码。
+  account_crawl:
+    accounts:
+      - 电子课文网
+      - 电子课本导航网
+      - ABC小学英语
+      - 未来树父母学堂
+      - 小树妈妈
+      - 人教小学英语
+      - 父母洞见
+      - 微言教育
+      - 软科
+      - 中国大学生在线
+      - 布衣粗食
+      - 部编本小学语文
+      - 青塔
+      - 清欢读书会
+      - 文先生说
+      - 新东方家庭教育
+    # 每个公众号最多抓多少篇。
+    max_results_per_account: 5
+    # 只保留这个时间窗口内的公众号文章，单位：小时。
+    time_range_hours:
+      min: 0
+      max: 72
+    # 首次扫码登录等待时间，单位：秒。
+    login_timeout_seconds: 180
+    # auto: 有登录态时无头复用，失效时自动打开可见浏览器。
+    # visible: 总是打开可见浏览器。headless: 总是无头。
+    browser_mode: auto
+    # true 时尝试进入文章详情页补正文。
+    fetch_detail_page: true
+    raw_output_dir: ./raw_data/wechat_mp
+    storage_state: ./browser_data/wechat_mp_state.json
+    # 微信后台操作节奏。太快容易失败，调小之前先确认登录态稳定。
+    rhythm:
+      slow_mo_ms: 300
+      action_delay_seconds: 1.5
+      article_delay_seconds: 3.0
+      page_delay_seconds: 4.0
+      account_delay_seconds: 8.0
+
+
+# ==================== TrendCrawlerRuntime 基础配置 ====================
+# 小红书和知乎都通过 TrendCrawlerRuntime 运行。
+# 如果以后开源时不直接内嵌 TrendCrawlerRuntime，可以把 dir 改成 ./third_party/TrendCrawlerRuntime。
+trend_crawler_runtime:
+  dir: ./TrendCrawlerRuntime
+  # 留空表示使用当前 Python；需要指定虚拟环境时填完整路径。
+  python_bin: ""
+  # 单次 TrendCrawlerRuntime 子进程最长运行时间，单位：秒。
+  timeout_seconds: 900
+  # TrendCrawlerRuntime 内部兜底数量上限；平台自己的 max_results_* 优先决定最终保留数量。
+  max_notes_count: 20
+  # qrcode: 扫码登录；cookie: 用 .env 中对应 COOKIE；phone: 手机号登录。
+  login_type: qrcode
+
+
+# ==================== 小红书 ====================
+# 小红书拆成两条：
+# 1. keyword_search: 全站关键词搜索，输入关键词
+# 2. account_crawl: 指定账号主页抓取，输入账号主页 URL，不是昵称关键词
+xiaohongshu:
+  # 小红书关键词搜索：搜平台内容，结果不一定属于某个账号。
+  keyword_search:
+    keywords:
+      - 教育改革
+      - 中考
+      - 小学英语
+      - 家庭教育
+    # 每个关键词最多保留多少条笔记。
+    max_results_per_keyword: 20
+    # 只保留最近多少小时内的笔记。
+    time_range_hours:
+      min: 0
+      max: 48
+
+  # 小红书账号抓取：抓指定账号发布的笔记。
+  # 必须填账号主页 URL，推荐网页登录后从账号主页复制完整 URL。
+  # URL 通常需要带 xsec_token 和 xsec_source。
+  account_crawl:
+    # 示例：
+    # creator_urls:
+    #   - https://www.xiaohongshu.com/user/profile/<user_id>?xsec_token=<token>&xsec_source=pc_search
+    creator_urls: []
+    # 每个账号最多保留多少条笔记。
+    max_results_per_account: 20
+    # 只保留最近多少小时内的账号笔记。
+    time_range_hours:
+      min: 0
+      max: 168
+  login_type: qrcode
+
+
+# ==================== 知乎 ====================
+# 知乎拆成两条：
+# 1. keyword_search: 全站关键词搜索，输入关键词
+# 2. account_crawl: 指定知乎用户主页抓取，输入 people URL，不是昵称关键词
+zhihu:
+  # 知乎关键词搜索：搜平台内容，结果不一定属于某个账号。
+  keyword_search:
+    keywords:
+      - 教育改革
+      - 中考
+      - 小学英语
+      - 家庭教育
+    # 每个关键词最多保留多少条内容。
+    max_results_per_keyword: 20
+    # 只保留最近多少小时内的内容。
+    time_range_hours:
+      min: 0
+      max: 72
+
+  # 知乎账号抓取：抓指定用户主页下的内容。
+  # 当前 TrendCrawlerRuntime 默认抓用户回答；文章/视频后续可以再做独立配置。
+  account_crawl:
+    # 示例：
+    # creator_urls:
+    #   - https://www.zhihu.com/people/<url_token>
+    creator_urls: []
+    # 每个账号最多保留多少条回答。
+    max_results_per_account: 20
+    # 只保留最近多少小时内的账号内容。
+    time_range_hours:
+      min: 0
+      max: 168
+  login_type: qrcode
+
+
+# ==================== Google News 通用关键词搜索 ====================
+# 这是通用资讯关键词搜索，不支持账号抓取。
+# 适合补充外部新闻背景，不等同于 Google 网页搜索。
+google_news:
+  keywords:
+    - 教育改革
+    - 中考
+    - 小学英语
+    - 家庭教育
+  # 每个关键词最多保留多少条新闻。
+  max_results_per_keyword: 20
+  # Google News 查询窗口，常用值：1d、2d、7d、30d。
+  period: 7d
+  language: zh-CN
+  country: CN
+
+
+# ==================== 输出 ====================
+output:
+  dir: ./output
+  filename_pattern: 教育热点日报_{date}.md
+  longxia_candidate_export_enabled: true
+  longxia_candidate_export_dir: ./output/longxia_trend_candidates
+  longxia_candidate_content_max_chars: 5000
+  longxia_candidate_timezone: Asia/Shanghai

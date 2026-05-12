@@ -23,6 +23,17 @@ from config.settings import (
 from models.hotspot import EducationHotspot
 
 
+SCORE_DIMENSIONS = (
+    "heat",
+    "authority",
+    "quality",
+    "resonance",
+    "timeliness",
+    "reference_value",
+    "risk_control",
+)
+
+
 class LongxiaCandidateExporter:
     """将已筛选热点导出为 longxia 可读取的候选 md 文件。"""
 
@@ -81,6 +92,8 @@ class LongxiaCandidateExporter:
         source = _single_line(hotspot.source)
         published_at = hotspot.publish_time.strftime("%Y-%m-%d %H:%M")
         url = _single_line(hotspot.url)
+        score_front_matter = _build_score_front_matter_lines(hotspot)
+        score_markdown = _build_score_markdown_lines(hotspot)
         content = _truncate_text(
             str(hotspot.content or "").strip(),
             LONGXIA_CANDIDATE_CONTENT_MAX_CHARS,
@@ -93,10 +106,12 @@ class LongxiaCandidateExporter:
             f"source: {_yaml_value(source)}",
             f"published_at: {_yaml_value(published_at)}",
             f"url: {_yaml_value(url)}",
+            *score_front_matter,
             "---",
             "",
             f"# {title}",
             "",
+            *score_markdown,
             "## 正文",
             "",
             content or title,
@@ -105,7 +120,7 @@ class LongxiaCandidateExporter:
         return "\n".join(sections)
 
     def _build_manifest_item(self, index: int, hotspot: EducationHotspot, date_label: str) -> dict:
-        return {
+        item = {
             "rank": index,
             "file": f"{date_label}_{index:02d}.md",
             "title": _compact_line(hotspot.title, 120),
@@ -114,6 +129,10 @@ class LongxiaCandidateExporter:
             "published_at": hotspot.publish_time.strftime("%Y-%m-%d %H:%M"),
             "url": _single_line(hotspot.url),
         }
+        score_payload = _build_score_manifest_payload(hotspot)
+        if score_payload:
+            item.update(score_payload)
+        return item
 
 
 def _single_line(value: str) -> str:
@@ -137,6 +156,80 @@ def _truncate_text(value: str, max_chars: int) -> str:
 def _yaml_value(value: str) -> str:
     escaped = str(value or "").replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
+
+
+def _build_score_front_matter_lines(hotspot: EducationHotspot) -> list[str]:
+    score = _numeric_value(hotspot.score)
+    score_details = hotspot.score_details if isinstance(hotspot.score_details, dict) else {}
+    if score is None and not score_details:
+        return []
+
+    lines: list[str] = []
+    if score is not None:
+        lines.append(f"score: {_format_number(score)}")
+    for dimension in SCORE_DIMENSIONS:
+        value = _numeric_value(score_details.get(dimension))
+        if value is not None:
+            lines.append(f"{dimension}: {_format_number(value)}")
+    return lines
+
+
+def _build_score_markdown_lines(hotspot: EducationHotspot) -> list[str]:
+    score = _numeric_value(hotspot.score)
+    score_details = hotspot.score_details if isinstance(hotspot.score_details, dict) else {}
+    if score is None and not score_details:
+        return []
+
+    lines = ["## AITrend 评分", ""]
+    if score is not None:
+        lines.append(f"- 综合分：{_format_number(score)}")
+    for dimension in SCORE_DIMENSIONS:
+        value = _numeric_value(score_details.get(dimension))
+        if value is not None:
+            lines.append(f"- {dimension}：{_format_number(value)}")
+
+    reason = _single_line(score_details.get("reason", ""))
+    best_angle = _single_line(score_details.get("best_angle", ""))
+    if reason:
+        lines.append(f"- reason：{reason}")
+    if best_angle:
+        lines.append(f"- best_angle：{best_angle}")
+    lines.append("")
+    return lines
+
+
+def _build_score_manifest_payload(hotspot: EducationHotspot) -> dict:
+    score = _numeric_value(hotspot.score)
+    score_details = hotspot.score_details if isinstance(hotspot.score_details, dict) else {}
+    if score is None and not score_details:
+        return {}
+
+    payload: dict = {}
+    if score is not None:
+        payload["score"] = score
+    detail_payload = {
+        dimension: value
+        for dimension in SCORE_DIMENSIONS
+        if (value := _numeric_value(score_details.get(dimension))) is not None
+    }
+    for text_key in ("reason", "best_angle"):
+        text = _single_line(score_details.get(text_key, ""))
+        if text:
+            detail_payload[text_key] = text
+    if detail_payload:
+        payload["score_details"] = detail_payload
+    return payload
+
+
+def _numeric_value(value) -> float | None:
+    try:
+        return round(float(value), 4)
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_number(value: float) -> str:
+    return f"{value:.4f}".rstrip("0").rstrip(".")
 
 
 def _today_in_longxia_timezone() -> date:

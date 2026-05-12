@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${PROJECT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/mac_daily_longxia_candidates.log"
+JOB_LOG_FILE="${LOG_DIR}/mac_daily_longxia_candidates.log"
 LOCK_DIR="${PROJECT_DIR}/.daily_longxia_candidates.lock"
 
 mkdir -p "${LOG_DIR}"
@@ -18,7 +18,7 @@ log() {
 }
 
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
-  log "skip: previous local longxia candidate job still active" | tee -a "${LOG_FILE}"
+  log "skip: previous local longxia candidate job still active" | tee -a "${JOB_LOG_FILE}"
   exit 0
 fi
 
@@ -41,7 +41,9 @@ export TZ="${LONGXIA_CANDIDATE_TIMEZONE:-Asia/Shanghai}"
 PYTHON_BIN="${PYTHON_BIN:-${PROJECT_DIR}/.venv/bin/python}"
 LONGXIA_SSH_TARGET="${LONGXIA_SSH_TARGET:-longxia}"
 LONGXIA_REMOTE_CANDIDATE_ROOT="${LONGXIA_REMOTE_CANDIDATE_ROOT:-/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/trend_candidates}"
+LONGXIA_REMOTE_SCORED_ROOT="${LONGXIA_REMOTE_SCORED_ROOT:-/home/admin/neo/auto_gongzhonghao/edu_renjiao/research/external_reference_scored_data}"
 LONGXIA_CANDIDATE_EXPORT_DIR="${LONGXIA_CANDIDATE_EXPORT_DIR:-${PROJECT_DIR}/output/longxia_trend_candidates}"
+LONGXIA_SCORED_DATA_DIR="${LONGXIA_SCORED_DATA_DIR:-${PROJECT_DIR}/scored_data}"
 
 {
   log "start local collection for longxia candidates"
@@ -71,8 +73,72 @@ LONGXIA_CANDIDATE_EXPORT_DIR="${LONGXIA_CANDIDATE_EXPORT_DIR:-${PROJECT_DIR}/out
     exit 1
   fi
 
+  DATE_STAMP="$(date +%Y%m%d)"
+  if [ ! -d "${LONGXIA_SCORED_DATA_DIR}" ]; then
+    log "error: scored data directory not found: ${LONGXIA_SCORED_DATA_DIR}"
+    exit 1
+  fi
+  SCORED_FILE="$(find "${LONGXIA_SCORED_DATA_DIR}" -maxdepth 1 -type f -name "merged_hotspots_${DATE_STAMP}_*.json" -size +0c -print | sort | tail -n 1)"
+  if [ -z "${SCORED_FILE}" ]; then
+    log "error: scored data file not found for ${DATE_STAMP} in ${LONGXIA_SCORED_DATA_DIR}"
+    exit 1
+  fi
+
+  SCORED_COUNT="$("${PYTHON_BIN}" - "${SCORED_FILE}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8-sig"))
+hotspots = data.get("hotspots")
+if not isinstance(hotspots, list) or not hotspots:
+    raise SystemExit("scored data has no hotspots")
+
+def is_number(value):
+    try:
+        float(value)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+scored_count = 0
+required_dimensions = (
+    "heat",
+    "authority",
+    "quality",
+    "resonance",
+    "timeliness",
+    "reference_value",
+    "risk_control",
+)
+for index, item in enumerate(hotspots, start=1):
+    if not isinstance(item, dict):
+        raise SystemExit(f"hotspot #{index} is not an object")
+    if not is_number(item.get("score")):
+        raise SystemExit(f"hotspot #{index} missing numeric score")
+    score_details = item.get("score_details")
+    if not isinstance(score_details, dict):
+        raise SystemExit(f"hotspot #{index} missing score_details")
+    for dimension in required_dimensions:
+        if not is_number(score_details.get(dimension)):
+            raise SystemExit(f"hotspot #{index} missing numeric score_details.{dimension}")
+    scored_count += 1
+
+print(scored_count)
+PY
+)"
+  if [ "${SCORED_COUNT}" -lt 1 ]; then
+    log "error: scored data validation returned zero items: ${SCORED_FILE}"
+    exit 1
+  fi
+
   log "upload ${CANDIDATE_COUNT} candidate md files to ${LONGXIA_SSH_TARGET}:${REMOTE_DIR}"
   ssh "${LONGXIA_SSH_TARGET}" "mkdir -p '${REMOTE_DIR}'"
   rsync -av --delete "${LOCAL_DIR}/" "${LONGXIA_SSH_TARGET}:${REMOTE_DIR}/"
+  REMOTE_SCORED_DIR="${LONGXIA_REMOTE_SCORED_ROOT}/${DATE_LABEL}"
+  log "upload scored data (${SCORED_COUNT} items) to ${LONGXIA_SSH_TARGET}:${REMOTE_SCORED_DIR}"
+  ssh "${LONGXIA_SSH_TARGET}" "mkdir -p '${REMOTE_SCORED_DIR}'"
+  rsync -av "${SCORED_FILE}" "${LONGXIA_SSH_TARGET}:${REMOTE_SCORED_DIR}/"
   log "finish local collection and upload"
-} >> "${LOG_FILE}" 2>&1
+} >> "${JOB_LOG_FILE}" 2>&1
