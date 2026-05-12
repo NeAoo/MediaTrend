@@ -59,6 +59,36 @@ def test_run_warning_command_does_not_fail_on_nonzero(monkeypatch, capsys):
     assert "WARN: pip conflict (exit code 1)" in capsys.readouterr().out
 
 
+def test_ensure_local_example_files_copies_missing_files(tmp_path, monkeypatch):
+    (tmp_path / ".env.example").write_text("LLM_API_KEY=\n", encoding="utf-8")
+    (tmp_path / "config.yaml.example").write_text(
+        "enabled_sources: []\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(bootstrap, "PROJECT_ROOT", tmp_path)
+
+    bootstrap.ensure_local_example_files(check=False)
+
+    assert (tmp_path / ".env").read_text(encoding="utf-8") == "LLM_API_KEY=\n"
+    assert (tmp_path / "config.yaml").read_text(encoding="utf-8") == (
+        "enabled_sources: []\n"
+    )
+
+
+def test_ensure_local_example_files_check_mode_does_not_write(tmp_path, monkeypatch):
+    (tmp_path / ".env.example").write_text("LLM_API_KEY=\n", encoding="utf-8")
+    (tmp_path / "config.yaml.example").write_text(
+        "enabled_sources: []\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(bootstrap, "PROJECT_ROOT", tmp_path)
+
+    bootstrap.ensure_local_example_files(check=True)
+
+    assert not (tmp_path / ".env").exists()
+    assert not (tmp_path / "config.yaml").exists()
+
+
 def test_bootstrap_runtime_dirs_include_configured_trendcrawler_path(
     tmp_path,
     monkeypatch,

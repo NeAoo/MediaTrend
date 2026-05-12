@@ -29,6 +29,10 @@ CONFIG_VALIDATION_MODULES = {
     "yaml": "PyYAML",
     "pydantic": "pydantic",
 }
+LOCAL_EXAMPLE_FILES = {
+    ".env": ".env.example",
+    "config.yaml": "config.yaml.example",
+}
 
 
 def command_to_text(command: list[str]) -> str:
@@ -119,6 +123,22 @@ def check_virtualenv_location() -> bool:
             break
 
     return ok
+
+
+def ensure_local_example_files(check: bool) -> None:
+    for local_name, example_name in LOCAL_EXAMPLE_FILES.items():
+        local_path = PROJECT_ROOT / local_name
+        example_path = PROJECT_ROOT / example_name
+        if local_path.exists():
+            continue
+        if not example_path.exists():
+            print(f"WARN: cannot create {local_name}; missing {example_name}")
+            continue
+        if check:
+            print(f"INFO: would create {local_name} from {example_name}")
+            continue
+        shutil.copyfile(example_path, local_path)
+        print(f"OK: created {local_name} from {example_name}")
 
 
 def missing_config_validation_modules() -> list[str]:
@@ -234,6 +254,7 @@ def main() -> int:
         return 1
 
     check_virtualenv_location()
+    ensure_local_example_files(check=args.check)
     ensure_runtime_dirs()
     files_ok = validate_required_files()
 

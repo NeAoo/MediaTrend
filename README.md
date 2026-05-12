@@ -2,19 +2,15 @@
 
 教育热点采集与分析工具。支持按关键词和明确账号采集多平台内容，调用 OpenAI 兼容模型评分，最后生成本地 Markdown 报告。
 
-推荐数据源：
+## 数据源
 
-- `wechat`：搜狗微信关键词搜索，按 `wechat.keyword_search` 采集公众号文章搜索结果。
-- `wechat_mp`：微信公众平台后台，按 `wechat.account_crawl` 固定公众号账号采集。
-- `xiaohongshu`：通过 `TrendCrawlerRuntime` 支持关键词搜索和账号主页采集。
-- `zhihu`：通过 `TrendCrawlerRuntime` 支持关键词搜索和用户主页采集。
-- `google_news`：通过 Google News 做通用关键词搜索。
+- `wechat`：搜狗微信关键词搜索，读取 `wechat.keyword_search`。
+- `wechat_mp`：微信公众平台后台，按指定公众号账号抓取，读取 `wechat.account_crawl`。
+- `xiaohongshu`：通过 `TrendCrawlerRuntime` 做小红书关键词搜索和账号主页抓取。
+- `zhihu`：通过 `TrendCrawlerRuntime` 做知乎关键词搜索和用户主页抓取。
+- `google_news`：通过 Google News RSS 做通用关键词搜索。
 
-longxia 自动上传默认关闭；正常运行的最终产物是 `output/` 下的 Markdown 文件。
-
-## 快速迁移
-
-在新机器上：
+## 快速开始
 
 ```bash
 git clone <repository_url>
@@ -23,183 +19,108 @@ cd AITrend
 python -m venv .venv
 source .venv/bin/activate
 
-cp /old/AITrend/.env .env
-cp /old/AITrend/config.yaml config.yaml
-
 python scripts/bootstrap.py
+```
+
+`bootstrap.py` 会在首次运行时自动从模板创建本地文件：
+
+- `.env.example` -> `.env`
+- `config.yaml.example` -> `config.yaml`
+
+创建后再填写自己的密钥和采集配置：
+
+```bash
+$EDITOR .env
+$EDITOR config.yaml
+```
+
+只采集不调用大模型：
+
+```bash
+python main.py search
+```
+
+完整流程会采集、合并、评分、筛选并生成 Markdown，需要在 `.env` 里填写 `LLM_API_KEY`：
+
+```bash
 python main.py run
 ```
 
-新机器第一次运行会为 `wechat_mp`、`xiaohongshu`、`zhihu` 打开登录流程，按提示扫码即可。登录态保存在本机运行目录，不需要也不建议跨机器复制。
+## 配置文件
 
-对外发布仓库不建议直接内嵌 `TrendCrawlerRuntime`。默认配置使用 `./third_party/TrendCrawlerRuntime`，可以手动 clone `TrendCrawlerRuntime` 到该目录，也可以把 `trend_crawler_runtime.dir` 指向你本机已有的 `TrendCrawlerRuntime` checkout。`TrendCrawlerRuntime` 使用内部使用说明，使用前请阅读它的 `LICENSE`。
+对外发布仓库只提交模板，不提交真实配置：
 
-## 配置分工
+- `config.yaml.example`：可提交的中文配置模板。
+- `config.yaml`：本机真实业务配置，已被 `.gitignore` 忽略。
+- `.env.example`：可提交的环境变量模板。
+- `.env`：本机密钥和机器差异配置，已被 `.gitignore` 忽略。
 
-`.env` 只放密钥和机器差异，例如：
+`config.yaml` 放业务配置，例如启用哪些源、公众号账号、关键词、数量、时间窗口和输出目录。
+
+`.env` 只放密钥和本机环境，例如：
 
 ```env
 LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-5.4
 SOGOU_WECHAT_COOKIE=
+XIAOHONGSHU_COOKIE=
+ZHIHU_COOKIE=
 GOOGLE_NEWS_PROXY_URL=
 LOG_LEVEL=INFO
-LOG_FILE=./logs/agent.log
-LOG_ROTATION=00:00
-LOG_RETENTION=30 days
-LOG_COMPRESSION=
 ```
 
-`config.yaml` 放业务配置，例如启用哪些源、公众号账号、关键词、数量、时间窗口和输出文件名。
+## 依赖文件
 
-从示例开始：
+根目录只保留一个主依赖入口：
 
-```bash
-cp config.yaml.example config.yaml
-```
+- `requirements.txt`：AITrend 主程序依赖。
+- `TrendCrawlerRuntime/requirements.txt`：TrendCrawlerRuntime 自己的依赖，只有小红书和知乎链路需要。
 
-常用配置形状：
-
-```yaml
-enabled_sources:
-  - wechat
-  - wechat_mp
-  - xiaohongshu
-  - zhihu
-  - google_news
-
-collection:
-  initial_collect_count: 30
-  time_range_hours:
-    min: 0
-    max: 24
-
-selection:
-  top_n: 10
-
-wechat:
-  keyword_search:
-    keywords:
-      - 教育改革
-      - 中考
-    max_results_per_keyword: 8
-    time_range_hours:
-      min: 0
-      max: 48
-    use_playwright: true
-    fetch_detail_page: false
-  account_crawl:
-    accounts:
-      - 中国教育报
-      - 人民教育
-    max_results_per_account: 10
-    time_range_hours:
-      min: 0
-      max: 168
-    browser_mode: auto
-
-xiaohongshu:
-  keyword_search:
-    keywords:
-      - 教育改革
-      - 中考
-    max_results_per_keyword: 20
-    time_range_hours:
-      min: 0
-      max: 48
-  account_crawl:
-    creator_urls: []
-    max_results_per_account: 20
-    time_range_hours:
-      min: 0
-      max: 168
-  login_type: qrcode
-
-zhihu:
-  keyword_search:
-    keywords:
-      - 教育改革
-      - 中考
-    max_results_per_keyword: 20
-    time_range_hours:
-      min: 0
-      max: 72
-  account_crawl:
-    creator_urls: []
-    max_results_per_account: 20
-    time_range_hours:
-      min: 0
-      max: 168
-  login_type: qrcode
-
-google_news:
-  keywords:
-    - 教育改革
-    - 中考
-  max_results_per_keyword: 20
-  period: 7d
-  language: zh-CN
-  country: CN
-
-output:
-  dir: ./output
-  filename_pattern: 教育热点日报_{date}.md
-  longxia_candidate_export_enabled: false
-```
-
-## 环境准备
-
-推荐使用：
+不要手动安装多个根目录 requirements。统一运行：
 
 ```bash
 python scripts/bootstrap.py
 ```
 
-这个脚本会：
+脚本会先安装根目录 `requirements.txt`，再根据 `config.yaml` 的 `trend_crawler_runtime.dir` 安装对应 `TrendCrawlerRuntime/requirements.txt`。
 
-- 创建运行目录。
-- 安装根项目依赖。
-- 安装 `trend_crawler_runtime.dir` 指向的 `TrendCrawlerRuntime` 依赖。
-- 安装 Playwright Chromium。
-- 检查 Node.js。知乎和 `TrendCrawlerRuntime` 的部分签名逻辑需要 Node.js >= 16。
-- 检查 `.env` 和 `config.yaml`。
-- 校验配置。
-- 报告本机登录态是否存在。
+## TrendCrawlerRuntime
 
-只检查不安装：
+当前仓库保留 `./TrendCrawlerRuntime` 兼容拷贝，所以默认配置是：
 
-```bash
-python scripts/bootstrap.py --check
+```yaml
+trend_crawler_runtime:
+  dir: ./TrendCrawlerRuntime
 ```
 
-## 运行方式
+这样 clone 后可以直接找到小红书和知乎采集入口。`TrendCrawlerRuntime` 有自己的许可约束，使用或二次对外发布前请阅读 `TrendCrawlerRuntime/LICENSE`。
 
-完整流程：采集、合并、评分、筛选、生成 Markdown。
+如果你想改成外置目录，可以把配置改为：
 
-```bash
-python main.py run
+```yaml
+trend_crawler_runtime:
+  dir: ./third_party/TrendCrawlerRuntime
 ```
 
-只采集和合并，不调用大模型：
+然后自行把兼容的 TrendCrawlerRuntime checkout 放到该目录。注意：小红书和知乎账号抓取依赖当前仓库对 creator 参数和输出文件的适配，不能随便换成未适配版本。
 
-```bash
-python main.py search
-```
+## 常用运行方式
 
 临时指定数据源：
 
 ```bash
 python main.py search --sources wechat_mp
-python main.py search --sources wechat,wechat_mp,xiaohongshu,zhihu,google_news
+python main.py search --sources wechat,google_news
+python main.py search --sources xiaohongshu,zhihu
 ```
 
 临时覆盖关键词或公众号账号：
 
 ```bash
-python main.py search --sources xiaohongshu,zhihu --keywords 中考,高考
 python main.py search --sources wechat,google_news --keywords 教育改革,中考
 python main.py search --sources wechat_mp --keywords 中国教育报,人民教育
+python main.py search --sources xiaohongshu,zhihu --keywords 中考,高考
 ```
 
 小红书和知乎账号主页采集：
@@ -218,20 +139,26 @@ python scripts/search_zhihu.py --mode both -k 教育改革,中考 -c 'https://ww
 
 ## 登录态
 
-登录态是机器本地状态，不属于迁移配置。
+登录态是本机运行状态，不提交到 Git。
 
-- `wechat_mp` 默认 `browser_mode: auto`。有本机登录态时会复用；没有或失效时会打开可见浏览器扫码。
+- `wechat_mp` 默认 `browser_mode: auto`。有登录态时走 headless，失效时自动打开可见浏览器扫码。
 - `xiaohongshu` 和 `zhihu` 默认 `login_type: qrcode`，首次运行由 `TrendCrawlerRuntime` 打开登录流程。
-- Cookie 登录保留为高级选项，但不是推荐迁移方式。
+- Cookie 登录保留为高级选项，只有把平台 `login_type` 改成 `cookie` 时才需要填写 `.env` 中的 Cookie。
 
-账号采集只接受明确主页 URL 或 ID，不做昵称自动选择。小红书账号采集推荐从网页登录后的账号主页复制完整 URL，URL 中应包含 `xsec_token` 和 `xsec_source`。知乎账号采集使用 `https://www.zhihu.com/people/yd1234567` 这种用户主页 URL。
+账号采集的输入边界：
 
-运行态目录默认不进 Git：
+- 微信公众号账号：填公众号名称。
+- 小红书账号：填账号主页 URL，不是昵称关键词。
+- 知乎账号：填用户主页 URL，不是昵称关键词。
+
+## 运行目录
+
+这些目录是运行时产物，默认不进 Git：
 
 ```text
 browser_data/
-third_party/TrendCrawlerRuntime/browser_data/
-third_party/TrendCrawlerRuntime/data/
+TrendCrawlerRuntime/browser_data/
+TrendCrawlerRuntime/data/
 raw_data/
 merged_data/
 scored_data/
@@ -239,34 +166,8 @@ output/
 logs/
 ```
 
-日志默认写入 `logs/agent.log`，每天 00:00 自动轮转，历史日志保留 30 天。需要压缩历史日志时可把 `LOG_COMPRESSION` 设为 `zip`、`gz` 等 loguru 支持的格式。
-
-## 输出文件
-
-主要输出：
-
-```text
-output/
-  教育热点日报_YYYYMMDD.md
-
-merged_data/
-  merged_hotspots_YYYYMMDD_HHMMSS.json
-
-scored_data/
-  merged_hotspots_YYYYMMDD_HHMMSS.json
-
-raw_data/
-  wechat_mp/
-```
-
 ## 测试
 
 ```bash
-python -m pytest tests/test_app_config.py tests/test_settings.py tests/test_wechat_mp_browser_mode.py tests/test_bootstrap.py -q
+python -m pytest -q tests
 ```
-
-## 注意事项
-
-- `config.yaml` 和 `.env` 都被 Git 忽略，迁移时从旧机器复制即可。
-- 首次新机器运行需要扫码登录，这是预期行为。
-- 采集依赖目标平台页面和风控状态，请控制频率并遵守平台规则。
