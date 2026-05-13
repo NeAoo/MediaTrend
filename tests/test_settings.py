@@ -167,6 +167,7 @@ enabled_sources:
   - xiaohongshu
   - zhihu
   - google_news
+  - aihot
 wechat:
   keyword_search:
     keywords:
@@ -221,6 +222,16 @@ google_news:
   period: 24h
   language: zh-CN
   country: CN
+aihot:
+  keywords:
+    - OpenAI
+  mode: all
+  categories:
+    - ai-models
+  max_results_per_query: 25
+  base_url: https://aihot.virxact.com
+  request_timeout_seconds: 12
+  user_agent: test-agent/1.0
 """,
         encoding="utf-8",
     )
@@ -237,6 +248,7 @@ google_news:
         "xiaohongshu",
         "zhihu",
         "google_news",
+        "aihot",
     ]
     assert settings.WECHAT_SEARCH_KEYWORDS == ["微信词"]
     assert settings.WECHAT_MAX_RESULTS_PER_KEYWORD == 3
@@ -261,3 +273,12 @@ google_news:
     assert settings.GOOGLE_NEWS_KEYWORDS == ["通用词"]
     assert settings.GOOGLE_NEWS_PERIOD == "24h"
     assert settings.GOOGLE_NEWS_PROXY_URL == "http://127.0.0.1:9899"
+    assert settings.AIHOT_KEYWORDS == ["OpenAI"]
+    assert settings.AIHOT_MODE == "all"
+    assert settings.AIHOT_CATEGORIES == ["ai-models"]
+    assert settings.AIHOT_MAX_RESULTS_PER_QUERY == 25
+    assert settings.AIHOT_BASE_URL == "https://aihot.virxact.com"
+    assert settings.AIHOT_REQUEST_TIMEOUT_SECONDS == 12
+    assert settings.AIHOT_USER_AGENT == "test-agent/1.0"
+    assert settings.get_source_keywords("aihot") == ["OpenAI"]
+    assert settings.get_source_keyword_time_range("aihot") == (0, 24)

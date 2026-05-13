@@ -7,9 +7,18 @@ import yaml
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SUPPORTED_SOURCES = {"wechat", "wechat_mp", "xiaohongshu", "zhihu", "google_news"}
+SUPPORTED_SOURCES = {
+    "wechat",
+    "wechat_mp",
+    "xiaohongshu",
+    "zhihu",
+    "google_news",
+    "aihot",
+}
 LoginType = Literal["qrcode", "cookie", "phone"]
 BrowserMode = Literal["auto", "visible", "headless"]
+AihotMode = Literal["selected", "all"]
+AihotCategory = Literal["ai-models", "ai-products", "industry", "paper", "tip"]
 
 
 class ConfigValidationError(ValueError):
@@ -111,6 +120,19 @@ class GoogleNewsConfig(BaseModel):
     country: str = "CN"
 
 
+class AihotConfig(BaseModel):
+    keywords: list[str] = Field(default_factory=list)
+    mode: AihotMode = "selected"
+    categories: list[AihotCategory] = Field(default_factory=list)
+    max_results_per_query: int = Field(50, ge=1, le=100)
+    base_url: str = "https://aihot.virxact.com"
+    request_timeout_seconds: int = Field(10, ge=1, le=60)
+    user_agent: str = (
+        "AITrend/0.1 (+https://github.com/NeAoo/MediaTrend; "
+        "contact: local-user)"
+    )
+
+
 class OutputConfig(BaseModel):
     dir: str = "./output"
     filename_pattern: str = "教育热点日报_{date}.md"
@@ -131,6 +153,7 @@ class AppConfig(BaseModel):
     xiaohongshu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
     zhihu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
     google_news: GoogleNewsConfig = Field(default_factory=GoogleNewsConfig)
+    aihot: AihotConfig = Field(default_factory=AihotConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
 
     @model_validator(mode="after")

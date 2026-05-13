@@ -9,12 +9,14 @@
 # xiaohongshu = 小红书，关键词搜索 + 指定账号主页抓取
 # zhihu       = 知乎，关键词搜索 + 指定用户主页抓取
 # google_news = Google News 通用关键词搜索
+# aihot       = AI HOT 强参考源，AI 行业精选/关键词/分类内容
 enabled_sources:
   - wechat_mp
   # - wechat
   # - xiaohongshu
   # - zhihu
   # - google_news
+  # - aihot
 
 # ==================== 全局采集与筛选 ====================
 collection:
@@ -152,6 +154,27 @@ google_news:
   period: 7d
   language: zh-CN
   country: CN
+
+# ==================== AI HOT ====================
+# source=aihot：AI 行业强参考源，不需要账号或 token。
+# 默认不填 keywords 时拉取精选池；填写 keywords 时走 AI HOT API 的 q= 搜索。
+aihot:
+  # selected = 精选候选池；all = 全部 AI 动态。日常建议 selected。
+  mode: selected
+  keywords: []
+  # 示例：
+  # keywords:
+  #   - OpenAI
+  #   - Agent
+  # 可选分类。为空表示不过滤分类。
+  # 取值：ai-models / ai-products / industry / paper / tip
+  categories: []
+  # 每个 query 最多返回多少条。AI HOT API 上限 100。
+  max_results_per_query: 50
+  base_url: https://aihot.virxact.com
+  request_timeout_seconds: 10
+  # AI HOT 明确要求必须带 User-Agent，不能使用默认 curl UA。
+  user_agent: "AITrend/0.1 (+https://github.com/NeAoo/MediaTrend; contact: local-user)"
 
 # ==================== 输出 ====================
 output:

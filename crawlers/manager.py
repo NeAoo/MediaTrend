@@ -23,6 +23,7 @@ CRAWLER_MAP = {
     "xiaohongshu": ("crawlers.xiaohongshu", "XiaohongshuCrawler"),
     "zhihu": ("crawlers.zhihu", "ZhihuCrawler"),
     "google_news": ("crawlers.google_news", "GoogleNewsCrawler"),
+    "aihot": ("crawlers.aihot", "AihotCrawler"),
     "general": ("crawlers.general", "GeneralEducationCrawler"),
     "demo": ("crawlers.demo", "DemoEducationCrawler"),
 }

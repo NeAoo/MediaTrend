@@ -99,6 +99,13 @@ MIGRATED_CONFIG_ENV_KEYS = {
     "GOOGLE_NEWS_PERIOD",
     "GOOGLE_NEWS_LANGUAGE",
     "GOOGLE_NEWS_COUNTRY",
+    "AIHOT_KEYWORDS",
+    "AIHOT_MODE",
+    "AIHOT_CATEGORIES",
+    "AIHOT_MAX_RESULTS_PER_QUERY",
+    "AIHOT_BASE_URL",
+    "AIHOT_REQUEST_TIMEOUT_SECONDS",
+    "AIHOT_USER_AGENT",
     "OUTPUT_DIR",
     "OUTPUT_FILENAME_PATTERN",
     "LONGXIA_CANDIDATE_EXPORT_ENABLED",
@@ -260,6 +267,15 @@ GOOGLE_NEWS_LANGUAGE = APP_CONFIG.google_news.language
 GOOGLE_NEWS_COUNTRY = APP_CONFIG.google_news.country
 GOOGLE_NEWS_PROXY_URL = os.getenv("GOOGLE_NEWS_PROXY_URL", "").strip()
 
+# ==================== AI HOT 强参考源 ====================
+AIHOT_KEYWORDS = APP_CONFIG.aihot.keywords
+AIHOT_MODE = APP_CONFIG.aihot.mode
+AIHOT_CATEGORIES = APP_CONFIG.aihot.categories
+AIHOT_MAX_RESULTS_PER_QUERY = APP_CONFIG.aihot.max_results_per_query
+AIHOT_BASE_URL = APP_CONFIG.aihot.base_url.rstrip("/")
+AIHOT_REQUEST_TIMEOUT_SECONDS = APP_CONFIG.aihot.request_timeout_seconds
+AIHOT_USER_AGENT = APP_CONFIG.aihot.user_agent
+
 # ==================== 通用资讯配置（保留为可选 legacy source） ====================
 GENERAL_SEARCH_KEYWORDS = _env_list("GENERAL_SEARCH_KEYWORDS", [])
 GENERAL_MAX_LINKS_PER_SITE = _env_int("GENERAL_MAX_LINKS_PER_SITE", 30)
@@ -319,6 +335,7 @@ SOURCE_KEYWORDS = {
     "xiaohongshu": XIAOHONGSHU_SEARCH_KEYWORDS,
     "zhihu": ZHIHU_SEARCH_KEYWORDS,
     "google_news": GOOGLE_NEWS_KEYWORDS,
+    "aihot": AIHOT_KEYWORDS,
     "general": GENERAL_SEARCH_KEYWORDS,
     "demo": [],
 }
@@ -333,6 +350,7 @@ SOURCE_KEYWORD_TIME_RANGES = {
     "xiaohongshu": XIAOHONGSHU_KEYWORD_TIME_RANGE_HOURS,
     "zhihu": ZHIHU_KEYWORD_TIME_RANGE_HOURS,
     "google_news": (TIME_RANGE_MIN, TIME_RANGE_MAX),
+    "aihot": (TIME_RANGE_MIN, TIME_RANGE_MAX),
     "general": (TIME_RANGE_MIN, TIME_RANGE_MAX),
     "demo": (TIME_RANGE_MIN, TIME_RANGE_MAX),
 }
@@ -349,6 +367,7 @@ SOURCE_RESULT_LIMITS = {
     "xiaohongshu": XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD,
     "zhihu": ZHIHU_MAX_RESULTS_PER_KEYWORD,
     "google_news": GOOGLE_NEWS_MAX_RESULTS_PER_KEYWORD,
+    "aihot": AIHOT_MAX_RESULTS_PER_QUERY,
     "general": GENERAL_MAX_LINKS_PER_SITE,
 }
 

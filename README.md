@@ -12,7 +12,7 @@ AITrend 是一个面向内容研究、教育行业观察和选题监控的趋势
 
 - **关键词 + 账号双模式**：同一份 `config.yaml` 同时管理关键词搜索和固定账号抓取。
 - **面向趋势报告**：采集不是终点，后续会合并、去重、AI 打分、筛选并输出 Markdown 日报。
-- **多平台输入**：支持微信关键词、微信公众号账号、小红书关键词/账号、知乎关键词/账号、Google News 关键词。
+- **多平台输入**：支持微信关键词、微信公众号账号、小红书关键词/账号、知乎关键词/账号、Google News 关键词、AI HOT 行业参考源。
 - **配置优先迁移**：业务配置放在 `config.yaml`，密钥和机器差异放在 `.env`，对外发布仓库只提交模板。
 - **可先只采集**：`python main.py search` 不调用大模型，适合先验证登录和数据源。
 - **适合个人和小团队**：不要求先搭分布式平台，不需要为了一个日报任务引入复杂调度系统。
@@ -26,6 +26,7 @@ AITrend 是一个面向内容研究、教育行业观察和选题监控的趋势
 | `xiaohongshu` | TrendCrawlerRuntime | 关键词、账号主页 URL | 监控小红书话题和指定创作者 |
 | `zhihu` | TrendCrawlerRuntime | 关键词、用户主页 URL | 监控知乎话题和指定用户 |
 | `google_news` | Google News RSS | 关键词 | 通用新闻关键词补充 |
+| `aihot` | AI HOT Public API | 精选池、关键词、分类 | 获取 AI 行业强参考内容 |
 
 账号采集的边界要分清：
 
@@ -155,6 +156,7 @@ zhihu:
 python main.py search --sources wechat_mp
 python main.py search --sources wechat,google_news
 python main.py search --sources xiaohongshu,zhihu
+python main.py search --sources aihot
 ```
 
 临时覆盖关键词或公众号账号：
@@ -163,6 +165,7 @@ python main.py search --sources xiaohongshu,zhihu
 python main.py search --sources wechat,google_news --keywords 教育改革,中考
 python main.py search --sources wechat_mp --keywords 中国教育报,人民教育
 python main.py search --sources xiaohongshu,zhihu --keywords 中考,高考
+python main.py search --sources aihot --keywords OpenAI,Agent
 ```
 
 单源脚本：
@@ -170,6 +173,8 @@ python main.py search --sources xiaohongshu,zhihu --keywords 中考,高考
 ```bash
 python scripts/search_wechat_mp.py -a 中国教育报,人民教育
 python scripts/search_google_news.py -k 教育改革,中考
+python scripts/search_aihot.py
+python scripts/search_aihot.py -k OpenAI,Agent
 python scripts/search_xiaohongshu.py --mode both -k 教育改革 -c 'https://www.xiaohongshu.com/user/profile/USER_ID?xsec_token=TOKEN&xsec_source=pc_search'
 python scripts/search_zhihu.py --mode both -k 教育改革 -c 'https://www.zhihu.com/people/URL_TOKEN'
 ```

@@ -68,6 +68,7 @@ enabled_sources:
   - xiaohongshu
   - zhihu
   - google_news
+  - aihot
 wechat:
   keyword_search:
     keywords:
@@ -119,6 +120,13 @@ google_news:
   period: 7d
   language: zh-CN
   country: CN
+aihot:
+  keywords:
+    - OpenAI
+  mode: selected
+  categories:
+    - ai-models
+  max_results_per_query: 30
 """,
         encoding="utf-8",
     )
@@ -131,6 +139,7 @@ google_news:
         "xiaohongshu",
         "zhihu",
         "google_news",
+        "aihot",
     ]
     assert config.wechat.keyword_search.keywords == ["微信词"]
     assert config.wechat.keyword_search.max_results_per_keyword == 4
@@ -150,6 +159,10 @@ google_news:
     assert config.zhihu.account_crawl.time_range_hours.max == 120
     assert config.google_news.keywords == ["通用词"]
     assert config.google_news.period == "7d"
+    assert config.aihot.keywords == ["OpenAI"]
+    assert config.aihot.mode == "selected"
+    assert config.aihot.categories == ["ai-models"]
+    assert config.aihot.max_results_per_query == 30
 
 
 def test_enabled_creator_source_accepts_empty_keywords_when_creator_urls_exist(tmp_path):
