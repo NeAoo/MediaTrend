@@ -1,0 +1,10 @@
+PRIVATE INTERNAL USE NOTICE
+
+This runtime is maintained as a private internal component for AITrend.
+It is intended for small-scale content research, account monitoring, and trend analysis only.
+
+Usage constraints:
+1. Keep request volume conservative.
+2. Respect target platform rules and account security requirements.
+3. Do not use this runtime for large-scale scraping or disruptive activity.
+4. Do not publish this runtime as an independent open-source project without a separate review.
