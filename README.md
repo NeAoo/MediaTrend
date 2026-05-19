@@ -13,7 +13,7 @@ AITrend 是一个面向内容研究、教育行业观察和选题监控的趋势
 - **关键词 + 账号双模式**：同一份 `config.yaml` 同时管理关键词搜索和固定账号抓取。
 - **面向趋势报告**：采集不是终点，后续会合并、去重、AI 打分、筛选并输出 Markdown 日报。
 - **多平台输入**：支持微信关键词、微信公众号账号、小红书关键词/账号、知乎关键词/账号、Google News 关键词、AI HOT 行业参考源。
-- **配置优先迁移**：业务配置放在 `config.yaml`，密钥和机器差异放在 `.env`，对外发布仓库只提交模板。
+- **配置优先迁移**：业务配置放在 `config.yaml`，密钥和机器差异放在 `.env`，仓库只保留可复用模板。
 - **可先只采集**：`python main.py search` 不调用大模型，适合先验证登录和数据源。
 - **适合个人和小团队**：不要求先搭分布式平台，不需要为了一个日报任务引入复杂调度系统。
 
@@ -34,9 +34,9 @@ AITrend 是一个面向内容研究、教育行业观察和选题监控的趋势
 - 小红书账号：填账号主页 URL，不是昵称关键词。
 - 知乎账号：填用户主页 URL，不是昵称关键词。
 
-## 和常见开源爬虫项目的区别
+## 和常见采集框架的区别
 
-AITrend 不试图替代 [TrendCrawlerRuntime](https://internal.local/TrendCrawlerRuntime)、[Scrapy](https://docs.scrapy.org/) 或 [Crawlab](https://github.com/crawlab-team/crawlab)。它的价值在更靠近“每天要产出一份可读趋势报告”的业务层。
+AITrend 不试图替代通用采集框架、[Scrapy](https://docs.scrapy.org/) 或 [Crawlab](https://github.com/crawlab-team/crawlab)。它的价值在更靠近“每天要产出一份可读趋势报告”的业务层。
 
 | 项目类型 | 主要强项 | AITrend 的区别 |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ AITrend 不试图替代 [TrendCrawlerRuntime](https://internal.local/TrendCrawle
 | Crawlab | 分布式爬虫管理平台，适合管理多语言、多任务爬虫 | AITrend 更轻，重点是单仓库配置化运行和内容分析产物，不需要先部署管理平台 |
 | 单一搜索脚本 | 快速抓某个平台某个关键词 | AITrend 把关键词监控和账号追踪放在同一矩阵里，并统一进入下游评分和日报 |
 
-一句话：很多开源项目解决“怎么抓”，AITrend 更关注“每天该看哪些账号和关键词，抓完后如何变成可读的趋势判断”。
+一句话：通用采集框架解决“怎么抓”，AITrend 更关注“每天该看哪些账号和关键词，抓完后如何变成可读的趋势判断”。
 
 ## 快速开始
 
@@ -91,7 +91,7 @@ python main.py start
 
 ## 配置文件
 
-对外发布仓库只提交模板，不提交真实配置：
+仓库只提交模板，不提交真实配置：
 
 - `config.yaml.example`：可提交的中文配置模板。
 - `config.yaml`：本机真实业务配置，已被 `.gitignore` 忽略。
@@ -210,7 +210,7 @@ trend_crawler_runtime:
   dir: ./TrendCrawlerRuntime
 ```
 
-这样 clone 后可以直接找到小红书和知乎采集入口。`TrendCrawlerRuntime` 有自己的许可约束，使用或二次对外发布前请阅读 `TrendCrawlerRuntime/LICENSE`。
+这样 clone 后可以直接找到小红书和知乎采集入口。`TrendCrawlerRuntime` 是内部采集运行时，使用或对外发布前请阅读 `TrendCrawlerRuntime/LICENSE`。
 
 如果你想改成外置目录，可以把配置改为：
 

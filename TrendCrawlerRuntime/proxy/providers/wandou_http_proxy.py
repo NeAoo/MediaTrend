@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/proxy/providers/wandou_http_proxy.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
@@ -18,7 +13,6 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # -*- coding: utf-8 -*-
-# @Author  : runtime-maintainer@example.local
 # @Time    : 2025/7/31
 # @Desc    : WanDou HTTP proxy IP implementation
 import os
@@ -72,7 +66,6 @@ class WanDouHttpProxy(ProxyProvider):
             response = await client.get(
                 url,
                 headers={
-                    "User-Agent": "TrendCrawlerRuntime https://internal.local/TrendCrawlerRuntime",
                 },
             )
             res_dict: Dict = response.json()

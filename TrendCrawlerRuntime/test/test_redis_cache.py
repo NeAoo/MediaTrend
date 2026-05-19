@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/test/test_redis_cache.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
@@ -19,8 +14,7 @@
 
 
 # -*- coding: utf-8 -*-
-# @Author  : runtime-maintainer@example.local
-# @Name: Programmer Ajiang-RuntimeMaintainer
+# @Name: Programmer Ajiang-Internal
 # @Time    : 2024/6/2 19:54
 # @Desc    :
 

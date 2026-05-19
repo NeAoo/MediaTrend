@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/cache/local_cache.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
@@ -19,8 +14,7 @@
 
 
 # -*- coding: utf-8 -*-
-# @Author  : runtime-maintainer@example.local
-# @Name    : Runtime Maintainer
+# @Name    : Programmer AJiang-Internal
 # @Time    : 2024/6/2 11:05
 # @Desc    : Local cache
 
@@ -130,7 +124,7 @@ class ExpiringLocalCache(AbstractCache):
 
 if __name__ == '__main__':
     cache = ExpiringLocalCache(cron_interval=2)
-    cache.set('name', 'Runtime Maintainer', 3)
+    cache.set('name', 'Programmer AJiang-Internal', 3)
     print(cache.get('key'))
     print(cache.keys("*"))
     time.sleep(4)

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/config/base_config.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 
 import os

@@ -155,7 +155,9 @@ def runtime_dirs_from_config() -> list[str]:
         from config.app_config import load_app_config
 
         app_config = load_app_config(os.getenv("AI_TREND_CONFIG", "config.yaml"))
-        trend_crawler_runtime_path = app_config.resolve_path(app_config.trend_crawler_runtime.dir)
+        trend_crawler_runtime_path = app_config.resolve_path(
+            app_config.trend_crawler_runtime.dir
+        )
         if is_relative_to(trend_crawler_runtime_path.resolve(), PROJECT_ROOT.resolve()):
             trend_crawler_runtime_dir = str(trend_crawler_runtime_path.relative_to(PROJECT_ROOT))
         else:
@@ -264,13 +266,16 @@ def main() -> int:
         trend_crawler_runtime_dir = PROJECT_ROOT / "TrendCrawlerRuntime"
 
     commands = [[sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]]
-    media_requirements = trend_crawler_runtime_dir / "requirements.txt"
-    if media_requirements.exists():
+    runtime_requirements = trend_crawler_runtime_dir / "requirements.txt"
+    if runtime_requirements.exists():
         commands.append(
-            [sys.executable, "-m", "pip", "install", "-r", str(media_requirements)]
+            [sys.executable, "-m", "pip", "install", "-r", str(runtime_requirements)]
         )
     else:
-        print(f"WARN: TrendCrawlerRuntime requirements not found: {media_requirements}")
+        print(
+            "WARN: TrendCrawlerRuntime requirements not found: "
+            f"{runtime_requirements}"
+        )
     commands.append([sys.executable, "-m", "playwright", "install", "chromium"])
     for command in commands:
         if run_command(command, check=args.check) != 0:

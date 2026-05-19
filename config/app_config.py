@@ -149,7 +149,9 @@ class AppConfig(BaseModel):
     collection: CollectionConfig = Field(default_factory=CollectionConfig)
     selection: SelectionConfig = Field(default_factory=SelectionConfig)
     wechat: WechatConfig = Field(default_factory=WechatConfig)
-    trend_crawler_runtime: TrendCrawlerRuntimeConfig = Field(default_factory=TrendCrawlerRuntimeConfig)
+    trend_crawler_runtime: TrendCrawlerRuntimeConfig = Field(
+        default_factory=TrendCrawlerRuntimeConfig
+    )
     xiaohongshu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
     zhihu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
     google_news: GoogleNewsConfig = Field(default_factory=GoogleNewsConfig)

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/tools/slider_util.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
@@ -19,7 +14,6 @@
 
 
 # -*- coding: utf-8 -*-
-# @Author  : runtime-maintainer@example.local
 # @Time    : 2023/12/2 12:55
 # @Desc    : Slider verification utility package
 import os
@@ -34,7 +28,7 @@ import numpy as np
 class Slide:
     """
     copy from https://blog.csdn.net/weixin_43582101 thanks for author
-    update: runtime_maintainer
+    update: internal
     """
     def __init__(self, gap, bg, gap_size=None, bg_size=None, out=None):
         """

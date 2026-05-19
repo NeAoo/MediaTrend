@@ -1,6 +1,5 @@
 [project]
 name = "trendcrawler"
-author = "程序员阿江-RuntimeMaintainer <runtime-maintainer@example.local>"
 version = "0.1.0"
 description = "A social media crawler project, support Xiaohongshu, Weibo, Zhihu, Bilibili, Douyin, BaiduTieBa etc."
 readme = "README.md"

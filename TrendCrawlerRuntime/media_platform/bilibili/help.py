@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/media_platform/bilibili/help.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
@@ -19,7 +14,6 @@
 
 
 # -*- coding: utf-8 -*-
-# @Author  : runtime-maintainer@example.local
 # @Time    : 2023/12/2 23:26
 # @Desc    : bilibili request parameter signing
 # Reverse engineering implementation reference: https://socialsisteryi.github.io/bilibili-API-collect/docs/misc/sign/wbi.html#wbi%E7%AD%BE%E5%90%8D%E7%AE%97%E6%B3%95

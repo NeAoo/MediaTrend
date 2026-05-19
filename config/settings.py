@@ -213,14 +213,20 @@ WECHAT_MP_STORAGE_STATE = str(
 )
 
 # ==================== TrendCrawlerRuntime 配置 ====================
-TREND_CRAWLER_RUNTIME_DIR = APP_CONFIG.resolve_path(APP_CONFIG.trend_crawler_runtime.dir)
+TREND_CRAWLER_RUNTIME_DIR = APP_CONFIG.resolve_path(
+    APP_CONFIG.trend_crawler_runtime.dir
+)
 TREND_CRAWLER_RUNTIME_PYTHON_BIN = (
     os.getenv("TREND_CRAWLER_RUNTIME_PYTHON_BIN", "").strip()
     or APP_CONFIG.trend_crawler_runtime.python_bin
     or sys.executable
 )
-TREND_CRAWLER_RUNTIME_MAX_NOTES_COUNT = APP_CONFIG.trend_crawler_runtime.max_notes_count
-TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS = APP_CONFIG.trend_crawler_runtime.timeout_seconds
+TREND_CRAWLER_RUNTIME_MAX_NOTES_COUNT = (
+    APP_CONFIG.trend_crawler_runtime.max_notes_count
+)
+TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS = (
+    APP_CONFIG.trend_crawler_runtime.timeout_seconds
+)
 TREND_CRAWLER_RUNTIME_LOGIN_TYPE = APP_CONFIG.trend_crawler_runtime.login_type
 
 XIAOHONGSHU_LOGIN_TYPE = APP_CONFIG.xiaohongshu.login_type

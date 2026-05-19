@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025 runtime-maintainer@example.local
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: https://internal.local/TrendCrawlerRuntime/blob/main/tools/file_header_manager.py
-# GitHub: https://internal.local
-# Licensed under PRIVATE INTERNAL USE NOTICE 1.1
 #
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
@@ -32,11 +27,8 @@ import sys
 from typing import List, Tuple
 
 # Project configuration
-REPO_URL = "https://internal.local/TrendCrawlerRuntime"
-GITHUB_PROFILE = "https://internal.local"
-EMAIL = "runtime-maintainer@example.local"
 COPYRIGHT_YEAR = "2025"
-LICENSE_TYPE = "PRIVATE INTERNAL USE NOTICE 1.1"
+LICENSE_TYPE = "PRIVATE INTERNAL USE NOTICE"
 
 # Disclaimer standard text
 DISCLAIMER = """# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
@@ -74,13 +66,9 @@ def generate_copyright_header(relative_path: str) -> str:
     Returns:
         Formatted copyright declaration string
     """
-    file_url = f"{REPO_URL}/blob/main/{relative_path}"
-
-    header = f"""# Copyright (c) {COPYRIGHT_YEAR} {EMAIL}
+    header = f"""# Private internal runtime module.
 #
-# This file is part of TrendCrawlerRuntime project.
-# Repository: {file_url}
-# GitHub: {GITHUB_PROFILE}
+# Copyright (c) {COPYRIGHT_YEAR} AITrend private runtime
 # Licensed under {LICENSE_TYPE}
 #"""
 
@@ -98,7 +86,7 @@ def has_copyright_header(content: str) -> bool:
         True if already contains copyright declaration
     """
     # Check if contains Copyright keyword
-    return "Copyright (c)" in content and "TrendCrawlerRuntime project" in content
+    return "Private internal runtime module" in content
 
 
 def has_disclaimer(content: str) -> bool:
