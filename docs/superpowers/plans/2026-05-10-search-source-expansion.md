@@ -4,7 +4,7 @@
 
 **Goal:** Build a migration-friendly search tool that supports WeChat keyword search, WeChat official account collection, Xiaohongshu keyword plus account collection, Zhihu keyword plus account collection, and Google News keyword search.
 
-**Architecture:** Keep the existing `CrawlerManager -> EducationHotspot -> DataMerger -> scorer/report` pipeline. Extend config validation and source wrappers instead of adding a second scheduler. Prepare `TrendCrawlerRuntime` for external placement through configurable paths and bootstrap logic, but do not delete the runtime directory in this implementation pass.
+**Architecture:** Keep the existing `CrawlerManager -> EducationHotspot -> DataMerger -> scorer/report` pipeline. Extend config validation and source wrappers instead of adding a second scheduler. Prepare `TrendCrawlerRuntime` for configurable placement through bootstrap logic, but do not move the runtime directory in this implementation pass.
 
 **Tech Stack:** Python 3.10+, Pydantic v2, Playwright, TrendCrawlerRuntime subprocess wrappers, GNews, pytest.
 
@@ -1424,7 +1424,7 @@ Add account URL rules:
 Add TrendCrawlerRuntime externalization note:
 
 ```markdown
-对外发布仓库不建议直接内嵌 TrendCrawlerRuntime。默认配置使用 `./third_party/TrendCrawlerRuntime`，可以手动 place compatible TrendCrawlerRuntime 到该目录，也可以把 `trend_crawler_runtime.dir` 指向你本机已有的 TrendCrawlerRuntime checkout。TrendCrawlerRuntime 使用内部使用说明，使用前请阅读其 LICENSE。
+对外发布仓库不建议直接强绑定运行时目录。默认配置可以使用 `./third_party/TrendCrawlerRuntime`，也可以把 `trend_crawler_runtime.dir` 指向本机已有的兼容运行时目录。
 ```
 
 - [ ] **Step 4: Run docs grep**
@@ -1503,4 +1503,4 @@ Expected: diffs only reflect this plan plus the already approved design and plan
 
 - Do not delete the current `TrendCrawlerRuntime/` directory in this plan. Deleting it is a separate open-source cleanup step because it affects history size and login-state paths.
 - For a truly clean public repository, create a fresh repo or rewrite history before publishing. Removing the directory from HEAD does not remove it from prior commits.
-- If the external `TrendCrawlerRuntime` is replaced with another checkout, preserve the Zhihu `--creator_id` patch either as a small documented patch file or as a pinned fork.
+- If `TrendCrawlerRuntime` is replaced with another checkout, preserve the Zhihu `--creator_id` patch as a small documented runtime patch.

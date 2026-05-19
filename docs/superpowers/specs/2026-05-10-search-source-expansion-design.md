@@ -9,7 +9,7 @@
 - `crawlers/manager.py` 已经认识 `wechat`、`wechat_mp`、`xiaohongshu`、`zhihu`、`general`。
 - `config/app_config.py` 的 `SUPPORTED_SOURCES` 只允许 `wechat_mp`、`xiaohongshu`、`zhihu`，导致 `wechat` 和通用搜索不能通过 `config.yaml` 正常启用。
 
-目标是把项目整理成一个可开源、可迁移的搜索软件，主打“关键词搜索 + 账号采集”。
+目标是把项目整理成一个可迁移、可自用部署的搜索软件，主打“关键词搜索 + 账号采集”。
 
 ## 目标
 
@@ -19,7 +19,7 @@
 - 支持知乎关键词搜索和指定账号采集：`zhihu`。
 - 支持通用关键词搜索：`google_news`，迁移 `/Users/neo/Desktop/知识库建设/google_news.py` 里有价值的 Google News 搜索能力。
 - 保持迁移方式简单：`.env` 放密钥和机器差异，`config.yaml` 放业务配置。
-- 为开源整理 `TrendCrawlerRuntime` 依赖，避免把 189M 的运行时目录直接内嵌在主仓库里。
+- 整理 `TrendCrawlerRuntime` 依赖，避免运行时目录和业务层边界混在一起。
 
 ## 非目标
 
@@ -149,11 +149,11 @@ TREND_CRAWLER_RUNTIME_PYTHON_BIN=
 
 ## TrendCrawlerRuntime 外置设计
 
-当前 `TrendCrawlerRuntime` 是被 Git 直接跟踪的普通目录，不是 submodule，目录大小约 189M。它使用内部使用说明。对外发布仓库如果继续内嵌，会带来三个问题：
+当前 `TrendCrawlerRuntime` 是被 Git 直接跟踪的普通目录，不是 submodule。目录体积较大，如果继续和业务代码强绑定，会带来三个问题：
 
 - 仓库体积大。
-- 主仓库看起来像重新分发运行时目录。
-- 许可证边界会让项目定位不清楚。
+- 运行时和业务层边界不清楚。
+- 后续迁移、部署和历史清理成本更高。
 
 推荐把 `TrendCrawlerRuntime` 外置为“运行时依赖目录”，而不是复制进主仓库：
 
@@ -176,10 +176,10 @@ trend_crawler_runtime:
 `scripts/bootstrap.py` 负责：
 
 - 如果 `trend_crawler_runtime.dir` 已存在，安装它的 requirements。
-- 如果不存在，提示用户 place compatible TrendCrawlerRuntime，或在用户同意执行时 clone 到 `third_party/TrendCrawlerRuntime`。
+- 如果不存在，提示用户放置兼容的 TrendCrawlerRuntime，或在用户同意执行时初始化到 `third_party/TrendCrawlerRuntime`。
 - 报告登录态位置从 `TrendCrawlerRuntime/browser_data` 改为 `third_party/TrendCrawlerRuntime/browser_data`。
 
-如果要保留同一个 Git 历史，只删除当前目录不会让历史里的 189M 消失。对外发布时建议新建干净仓库，或用历史重写工具清掉 运行时历史。这个动作应独立于搜索功能实现，避免把业务改动和仓库历史治理混在一起。
+如果要保留同一个 Git 历史，只删除当前目录不会让历史里的大体积运行时消失。对外发布时建议新建干净仓库，或用历史重写工具清掉旧运行时历史。这个动作应独立于搜索功能实现，避免把业务改动和仓库历史治理混在一起。
 
 ## 文件变更范围
 
@@ -201,7 +201,7 @@ trend_crawler_runtime:
 预计删除或迁移：
 
 - 第一阶段不删除 `TrendCrawlerRuntime/`，先让新配置支持外置路径。
-- 第二阶段对外发布前删除 运行时目录或创建干净仓库。
+- 第二阶段对外发布前评估是否保留运行时目录，必要时创建干净仓库。
 
 ## 验收标准
 
@@ -216,5 +216,5 @@ trend_crawler_runtime:
 
 - Google News 在国内网络环境依赖代理，README 要写清楚 `GOOGLE_NEWS_PROXY_URL`。
 - 小红书账号 URL 缺少 `xsec_token` 时不属于第一版支持口径，文档必须要求从网页登录后的账号主页复制完整 URL。
-- 修改 `TrendCrawlerRuntime/cmd_arg/arg.py` 属于运行时目录补丁。外置之后如果直接 clone upstream，需要保存一个小 patch 或 fork。
+- 修改 `TrendCrawlerRuntime/cmd_arg/arg.py` 属于运行时补丁。外置之后如果替换运行时目录，需要同步保留这处小补丁。
 - 删除内嵌 `TrendCrawlerRuntime` 会影响当前登录态路径，必须在 README 说明登录态不可迁移或需要重新登录。

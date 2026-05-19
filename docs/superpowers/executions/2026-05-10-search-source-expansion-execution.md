@@ -19,7 +19,7 @@
 注意事项：
 
 - 当前工作区已有与本任务无关的修改，执行时不回滚不相关文件。
-- 当前 `TrendCrawlerRuntime` 仍保留在仓库中，对外发布前的历史清理作为独立步骤处理。
+- 当前 `TrendCrawlerRuntime` 仍保留在仓库中，历史清理作为独立步骤处理。
 
 验证结果：
 
@@ -31,8 +31,8 @@
 - `python -m pytest tests/test_app_config.py tests/test_settings.py tests/test_bootstrap.py tests/test_google_news_crawler.py tests/test_xiaohongshu_crawler_modes.py tests/test_zhihu_crawler_modes.py tests/test_trendcrawler_arg_zhihu_creator.py -q`：通过，22 passed。
 - `python -m pytest tests/test_app_config.py tests/test_settings.py tests/test_wechat_mp_browser_mode.py tests/test_bootstrap.py -q`：通过，20 passed。
 - `python scripts/bootstrap.py --check`：通过；提示当前 Python 环境在 `/Users/neo/anaconda3`，不是项目 `.venv`。
-- `python -m pytest -q`：通过，35 passed。为避免根项目收集第三方 `TrendCrawlerRuntime` 自带测试，已新增 `pytest.ini` 限定 `testpaths = tests`。
-- `AI_TREND_CONFIG=config.yaml.example python scripts/bootstrap.py --check`：通过；示例配置会创建 `third_party/TrendCrawlerRuntime` 运行目录，并在未 place compatible TrendCrawlerRuntime 时提示 requirements 缺失和首次运行需要登录。
+- `python -m pytest -q`：通过，35 passed。为避免根项目收集运行时自带测试，已新增 `pytest.ini` 限定 `testpaths = tests`。
+- `AI_TREND_CONFIG=config.yaml.example python scripts/bootstrap.py --check`：通过；示例配置会创建 `third_party/TrendCrawlerRuntime` 运行目录，并在运行时目录缺失时提示 requirements 缺失和首次运行需要登录。
 - 当前 Anaconda 环境尚未安装 `gnews`，但 `requirements.txt` 已声明 `gnews>=0.4.1,<1`；正式运行前执行 `python scripts/bootstrap.py` 会安装根项目依赖。
 - 复查时修正了 `scripts/bootstrap.py` 的登录态判断：不再把刚创建的空 `TrendCrawlerRuntime/browser_data` 目录误报为已有登录态。
 
