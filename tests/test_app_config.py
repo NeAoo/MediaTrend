@@ -3,6 +3,16 @@ import pytest
 from config.app_config import ConfigValidationError, load_app_config
 
 
+def test_default_config_uses_no_login_google_news_source(tmp_path):
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("{}", encoding="utf-8")
+
+    config = load_app_config(config_file)
+
+    assert config.enabled_sources == ["google_news"]
+    assert config.google_news.keywords == ["教育改革", "中考"]
+
+
 def test_load_app_config_reads_business_config(tmp_path):
     config_file = tmp_path / "config.yaml"
     config_file.write_text(
@@ -38,7 +48,7 @@ zhihu:
 output:
   dir: ./out
   filename_pattern: report_{date}.md
-  longxia_candidate_export_enabled: false
+  material_export_enabled: false
 """,
         encoding="utf-8",
     )
@@ -55,7 +65,7 @@ output:
     assert config.zhihu.keyword_search.max_results_per_keyword == 7
     assert config.output.dir == "./out"
     assert config.output.filename_pattern == "report_{date}.md"
-    assert config.output.longxia_candidate_export_enabled is False
+    assert config.output.material_export_enabled is False
 
 
 def test_load_app_config_supports_keyword_and_creator_sources(tmp_path):

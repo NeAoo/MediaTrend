@@ -15,6 +15,8 @@ SUPPORTED_SOURCES = {
     "google_news",
     "aihot",
 }
+DEFAULT_ENABLED_SOURCES = ("google_news",)
+DEFAULT_GOOGLE_NEWS_KEYWORDS = ("教育改革", "中考")
 LoginType = Literal["qrcode", "cookie", "phone"]
 BrowserMode = Literal["auto", "visible", "headless"]
 AihotMode = Literal["selected", "all"]
@@ -64,6 +66,7 @@ class TrendCrawlerRuntimeConfig(BaseModel):
 class KeywordSearchConfig(BaseModel):
     keywords: list[str] = Field(default_factory=list)
     max_results_per_keyword: int = Field(20, ge=1)
+    expected_min_results: int = Field(3, ge=0)
     time_range_hours: TimeRangeConfig = Field(default_factory=TimeRangeConfig)
 
 
@@ -76,6 +79,7 @@ class WechatKeywordSearchConfig(KeywordSearchConfig):
 class WechatAccountCrawlConfig(BaseModel):
     accounts: list[str] = Field(default_factory=list)
     max_results_per_account: int = Field(10, ge=1)
+    expected_min_results: int = Field(3, ge=0)
     time_range_hours: TimeRangeConfig = Field(
         default_factory=lambda: TimeRangeConfig(min=0, max=168)
     )
@@ -90,6 +94,7 @@ class WechatAccountCrawlConfig(BaseModel):
 class CreatorAccountCrawlConfig(BaseModel):
     creator_urls: list[str] = Field(default_factory=list)
     max_results_per_account: int = Field(20, ge=1)
+    expected_min_results: int = Field(3, ge=0)
     time_range_hours: TimeRangeConfig = Field(
         default_factory=lambda: TimeRangeConfig(min=0, max=168)
     )
@@ -113,8 +118,9 @@ class CreatorSourceConfig(BaseModel):
 
 
 class GoogleNewsConfig(BaseModel):
-    keywords: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=lambda: list(DEFAULT_GOOGLE_NEWS_KEYWORDS))
     max_results_per_keyword: int = Field(20, ge=1)
+    expected_min_results: int = Field(3, ge=0)
     period: str = "7d"
     language: str = "zh-CN"
     country: str = "CN"
@@ -125,6 +131,7 @@ class AihotConfig(BaseModel):
     mode: AihotMode = "selected"
     categories: list[AihotCategory] = Field(default_factory=list)
     max_results_per_query: int = Field(50, ge=1, le=100)
+    expected_min_results: int = Field(3, ge=0)
     base_url: str = "https://aihot.virxact.com"
     request_timeout_seconds: int = Field(10, ge=1, le=60)
     user_agent: str = (
@@ -135,16 +142,35 @@ class AihotConfig(BaseModel):
 
 class OutputConfig(BaseModel):
     dir: str = "./output"
-    filename_pattern: str = "教育热点日报_{date}.md"
-    longxia_candidate_export_enabled: bool = False
-    longxia_candidate_export_dir: str = "./output/longxia_trend_candidates"
-    longxia_candidate_content_max_chars: int = Field(5000, ge=500)
-    longxia_candidate_timezone: str = "Asia/Shanghai"
+    filename_pattern: str = "热点日报_{date}.md"
+    material_export_enabled: bool = False
+    material_export_dir: str = "./output/materials"
+    material_content_max_chars: int = Field(5000, ge=500)
+    material_timezone: str = "Asia/Shanghai"
+
+
+class ScoringPromptConfig(BaseModel):
+    system_path: str = "./prompts/scoring_system_prompt.md"
+    user_path: str = "./prompts/scoring_user_prompt.md"
+
+
+class ScoringConfig(BaseModel):
+    enabled: bool = True
+    base_url: str = "https://api.openai.com/v1"
+    model: str = "gpt-5.4"
+    timeout_seconds: float = Field(120.0, ge=10)
+    max_retries: int = Field(1, ge=0)
+    max_completion_tokens: int = Field(0, ge=0)
+    reasoning_effort: str = ""
+    workers: int = Field(5, ge=1)
+    parse_failure_score: float = Field(1.0, ge=1.0, le=10.0)
+    random_fallback_on_all_parse_failures: bool = True
+    prompt: ScoringPromptConfig = Field(default_factory=ScoringPromptConfig)
 
 
 class AppConfig(BaseModel):
     enabled_sources: list[str] = Field(
-        default_factory=lambda: ["wechat_mp"]
+        default_factory=lambda: list(DEFAULT_ENABLED_SOURCES)
     )
     collection: CollectionConfig = Field(default_factory=CollectionConfig)
     selection: SelectionConfig = Field(default_factory=SelectionConfig)
@@ -156,6 +182,7 @@ class AppConfig(BaseModel):
     zhihu: CreatorSourceConfig = Field(default_factory=CreatorSourceConfig)
     google_news: GoogleNewsConfig = Field(default_factory=GoogleNewsConfig)
     aihot: AihotConfig = Field(default_factory=AihotConfig)
+    scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
 
     @model_validator(mode="after")

@@ -11,11 +11,11 @@
 # google_news = Google News 通用关键词搜索
 # aihot       = AI HOT 强参考源，AI 行业精选/关键词/分类内容
 enabled_sources:
-  - wechat_mp
+  - google_news
   # - wechat
+  # - wechat_mp
   # - xiaohongshu
   # - zhihu
-  # - google_news
   # - aihot
 
 # ==================== 全局采集与筛选 ====================
@@ -40,6 +40,8 @@ wechat:
       - 中考
     # 每个关键词最多抓多少条搜索结果。
     max_results_per_keyword: 8
+    # 前端进度预期值，只用于提示“低于预期”，不作为采集硬约束。
+    expected_min_results: 3
     # 关键词搜索的时间窗口，单位：小时。
     time_range_hours:
       min: 0
@@ -57,6 +59,8 @@ wechat:
       - 人民教育
     # 每个公众号最多抓多少篇。
     max_results_per_account: 10
+    # 前端进度预期值，只用于提示“低于预期”，不作为采集硬约束。
+    expected_min_results: 3
     # 公众号账号抓取的时间窗口，单位：小时。
     time_range_hours:
       min: 0
@@ -101,6 +105,7 @@ xiaohongshu:
       - 教育改革
       - 中考
     max_results_per_keyword: 20
+    expected_min_results: 3
     time_range_hours:
       min: 0
       max: 48
@@ -113,6 +118,7 @@ xiaohongshu:
     # creator_urls:
     #   - https://www.xiaohongshu.com/user/profile/<user_id>?xsec_token=<token>&xsec_source=pc_search
     max_results_per_account: 20
+    expected_min_results: 3
     time_range_hours:
       min: 0
       max: 168
@@ -126,6 +132,7 @@ zhihu:
       - 教育改革
       - 中考
     max_results_per_keyword: 20
+    expected_min_results: 3
     time_range_hours:
       min: 0
       max: 72
@@ -138,6 +145,7 @@ zhihu:
     # creator_urls:
     #   - https://www.zhihu.com/people/<url_token>
     max_results_per_account: 20
+    expected_min_results: 3
     time_range_hours:
       min: 0
       max: 168
@@ -150,6 +158,7 @@ google_news:
     - 教育改革
     - 中考
   max_results_per_keyword: 20
+  expected_min_results: 3
   # Google News RSS 支持类似 1h、24h、7d、30d 的时间段。
   period: 7d
   language: zh-CN
@@ -171,17 +180,36 @@ aihot:
   categories: []
   # 每个 query 最多返回多少条。AI HOT API 上限 100。
   max_results_per_query: 50
+  expected_min_results: 3
   base_url: https://aihot.virxact.com
   request_timeout_seconds: 10
   # AI HOT 明确要求必须带 User-Agent，不能使用默认 curl UA。
   user_agent: "AITrend/0.1 (+https://github.com/NeAoo/MediaTrend; contact: local-user)"
 
+# ==================== 打分模型 ====================
+# enabled=false 时只采集并合并 JSON，不调用大模型、不生成评分报告。
+# API Key 属于密钥，写在 .env 的 LLM_API_KEY，不写在这里。
+scoring:
+  enabled: true
+  base_url: https://api.openai.com/v1
+  model: gpt-5.4
+  timeout_seconds: 120
+  max_retries: 1
+  max_completion_tokens: 0
+  reasoning_effort: ""
+  workers: 5
+  parse_failure_score: 1.0
+  random_fallback_on_all_parse_failures: true
+  prompt:
+    system_path: ./prompts/scoring_system_prompt.md
+    user_path: ./prompts/scoring_user_prompt.md
+
 # ==================== 输出 ====================
 output:
   dir: ./output
-  filename_pattern: 教育热点日报_{date}.md
-  # 默认关闭私有候选导出，开源用户通常不需要这条内部链路。
-  longxia_candidate_export_enabled: false
-  longxia_candidate_export_dir: ./output/longxia_trend_candidates
-  longxia_candidate_content_max_chars: 5000
-  longxia_candidate_timezone: Asia/Shanghai
+  filename_pattern: 热点日报_{date}.md
+  # true = 额外导出稳定素材包，供下游内容生成项目读取。
+  material_export_enabled: false
+  material_export_dir: ./output/materials
+  material_content_max_chars: 5000
+  material_timezone: Asia/Shanghai

@@ -1,0 +1,1 @@
+"""AITrend web backend package."""

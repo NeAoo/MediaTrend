@@ -54,6 +54,12 @@ config.*.yaml
 nul
 *.html
 .DS_Store
+.superpowers/
+.playwright-cli/
+web_jobs/
+web/frontend/node_modules/
+web/frontend/dist/
+web/frontend/*.tsbuildinfo
 
 # 外置第三方依赖
 third_party/

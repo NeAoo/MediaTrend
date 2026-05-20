@@ -3,6 +3,7 @@
 
 APScheduler==3.11.2
 beautifulsoup4==4.14.3
+fastapi>=0.115,<1
 feedparser>=6.0.0,<7
 gnews>=0.4.1,<1
 loguru==0.7.3
@@ -11,7 +12,8 @@ openai==2.32.0
 playwright==1.45.0
 pydantic>=2.5.2,<3
 PyYAML==6.0.2
-python-dotenv>=1.0.1,<2
-requests==2.32.3
+python-dotenv>=1.2.2,<2
+requests>=2.34.2,<3
 socksio==1.0.0
-pytest==8.3.4
+pytest>=9.0.3,<10
+uvicorn[standard]>=0.30,<1

@@ -1,8 +1,4 @@
-"""
-longxia 人工候选 Markdown 导出器。
-
-longxia 侧约定：一个 md 文件代表一篇候选，文件名必须以日期开头。
-"""
+"""Generic material package exporter for downstream content generation."""
 
 from __future__ import annotations
 
@@ -10,15 +6,16 @@ from datetime import date, datetime
 import json
 from pathlib import Path
 import re
+import shutil
 from typing import Iterable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from loguru import logger
 
 from config.settings import (
-    LONGXIA_CANDIDATE_CONTENT_MAX_CHARS,
-    LONGXIA_CANDIDATE_EXPORT_DIR,
-    LONGXIA_CANDIDATE_TIMEZONE,
+    MATERIAL_CONTENT_MAX_CHARS,
+    MATERIAL_EXPORT_DIR,
+    MATERIAL_TIMEZONE,
 )
 from models.hotspot import EducationHotspot
 
@@ -34,60 +31,70 @@ SCORE_DIMENSIONS = (
 )
 
 
-class LongxiaCandidateExporter:
-    """将已筛选热点导出为 longxia 可读取的候选 md 文件。"""
+class MaterialExporter:
+    """Export selected hotspots as a stable material package."""
 
-    def __init__(self, output_root: str = LONGXIA_CANDIDATE_EXPORT_DIR):
+    def __init__(self, output_root: str = MATERIAL_EXPORT_DIR):
         self.output_root = Path(output_root)
 
     def export(
         self,
         hotspots: Iterable[EducationHotspot],
-        candidate_date: date | None = None,
+        material_date: date | None = None,
+        source_names: list[str] | None = None,
     ) -> Path:
-        """导出候选文件，并返回当天候选目录。"""
         items = list(hotspots)
         if not items:
-            raise ValueError("没有可导出的 longxia 候选内容")
+            raise ValueError("没有可导出的素材内容")
 
-        target_date = candidate_date or _today_in_longxia_timezone()
+        target_date = material_date or _today_in_material_timezone()
         date_label = target_date.strftime("%Y-%m-%d")
         output_dir = self.output_root / date_label
-        output_dir.mkdir(parents=True, exist_ok=True)
+        candidates_dir = output_dir / "candidates"
+        if candidates_dir.exists():
+            shutil.rmtree(candidates_dir)
+        candidates_dir.mkdir(parents=True, exist_ok=True)
 
-        for old_file in output_dir.glob(f"{date_label}_*.md"):
-            old_file.unlink()
-
+        manifest_items: list[dict] = []
         for index, hotspot in enumerate(items, start=1):
-            file_path = output_dir / f"{date_label}_{index:02d}.md"
-            file_path.write_text(
+            md_name = f"{index:03d}.md"
+            json_name = f"{index:03d}.json"
+            md_path = candidates_dir / md_name
+            json_path = candidates_dir / json_name
+            md_path.write_text(
                 self._build_candidate_markdown(index, hotspot),
                 encoding="utf-8",
             )
+            metadata = self._build_metadata(index, hotspot, md_name, json_name)
+            json_path.write_text(
+                json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            manifest_items.append(metadata)
 
         manifest_path = output_dir / "manifest.json"
         manifest_path.write_text(
             json.dumps(
                 {
                     "date": date_label,
+                    "generated_at": _now_in_material_timezone().isoformat(),
                     "count": len(items),
-                    "content_max_chars": LONGXIA_CANDIDATE_CONTENT_MAX_CHARS,
-                    "items": [
-                        self._build_manifest_item(index, hotspot, date_label)
-                        for index, hotspot in enumerate(items, start=1)
-                    ],
+                    "source_names": source_names or [],
+                    "content_max_chars": MATERIAL_CONTENT_MAX_CHARS,
+                    "items": manifest_items,
                 },
                 ensure_ascii=False,
                 indent=2,
-            ),
+            )
+            + "\n",
             encoding="utf-8",
         )
 
-        logger.info(f"longxia 候选 md 已生成: {output_dir} ({len(items)} 篇)")
+        logger.info(f"素材包已生成: {output_dir} ({len(items)} 篇)")
         return output_dir
 
     def _build_candidate_markdown(self, index: int, hotspot: EducationHotspot) -> str:
-        title = _compact_line(hotspot.title, 120) or f"候选文章 {index}"
+        title = _compact_line(hotspot.title, 120) or f"候选素材 {index}"
         account = _single_line(hotspot.author or hotspot.source or "")
         source = _single_line(hotspot.source)
         published_at = hotspot.publish_time.strftime("%Y-%m-%d %H:%M")
@@ -96,7 +103,7 @@ class LongxiaCandidateExporter:
         score_markdown = _build_score_markdown_lines(hotspot)
         content = _truncate_text(
             str(hotspot.content or "").strip(),
-            LONGXIA_CANDIDATE_CONTENT_MAX_CHARS,
+            MATERIAL_CONTENT_MAX_CHARS,
         )
 
         sections = [
@@ -119,10 +126,17 @@ class LongxiaCandidateExporter:
         ]
         return "\n".join(sections)
 
-    def _build_manifest_item(self, index: int, hotspot: EducationHotspot, date_label: str) -> dict:
+    def _build_metadata(
+        self,
+        index: int,
+        hotspot: EducationHotspot,
+        md_name: str,
+        json_name: str,
+    ) -> dict:
         item = {
             "rank": index,
-            "file": f"{date_label}_{index:02d}.md",
+            "file": f"candidates/{md_name}",
+            "metadata_file": f"candidates/{json_name}",
             "title": _compact_line(hotspot.title, 120),
             "account": _single_line(hotspot.author or hotspot.source or ""),
             "source": _single_line(hotspot.source),
@@ -232,9 +246,13 @@ def _format_number(value: float) -> str:
     return f"{value:.4f}".rstrip("0").rstrip(".")
 
 
-def _today_in_longxia_timezone() -> date:
+def _today_in_material_timezone() -> date:
+    return _now_in_material_timezone().date()
+
+
+def _now_in_material_timezone() -> datetime:
     try:
-        return datetime.now(ZoneInfo(LONGXIA_CANDIDATE_TIMEZONE)).date()
+        return datetime.now(ZoneInfo(MATERIAL_TIMEZONE))
     except ZoneInfoNotFoundError:
-        logger.warning(f"未知时区 {LONGXIA_CANDIDATE_TIMEZONE}，使用本机当前日期")
-        return datetime.now().date()
+        logger.warning(f"未知时区 {MATERIAL_TIMEZONE}，使用本机当前日期")
+        return datetime.now()

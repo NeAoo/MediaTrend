@@ -11,18 +11,19 @@ from loguru import logger
 from config.settings import (
     ENABLED_SOURCES,
     LLM_API_KEY,
-    LONGXIA_CANDIDATE_EXPORT_ENABLED,
     LOG_COMPRESSION,
     LOG_FILE,
     LOG_LEVEL,
     LOG_RETENTION,
     LOG_ROTATION,
+    MATERIAL_EXPORT_ENABLED,
+    SCORING_ENABLED,
     SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES,
     SCHEDULE_TIME,
     TOP_N_SELECT_COUNT,
 )
 from crawlers.manager import AVAILABLE_SOURCES, CrawlerManager
-from formatters.longxia_candidates import LongxiaCandidateExporter
+from formatters.material_exporter import MaterialExporter
 from formatters.markdown import MarkdownGenerator
 from merger.data_merger import DataMerger
 from scorers.scorer import ContentScorer
@@ -107,15 +108,17 @@ def _select_random_fallback(hotspots: list, n: int) -> list:
 def run_collection_task(
     sources: list[str] | None = None,
     keyword_override: list[str] | None = None,
+    scoring_enabled: bool | None = None,
 ) -> bool:
     """执行一次完整的采集、打分和报告生成。"""
     logger.info("=" * 60)
     logger.info("教育热点搜集 Agent 启动")
     logger.info("=" * 60)
 
-    if not LLM_API_KEY:
+    should_score = SCORING_ENABLED if scoring_enabled is None else scoring_enabled
+    if should_score and not LLM_API_KEY:
         logger.error("未配置 LLM_API_KEY，无法执行完整打分流程")
-        logger.error("请先填写 .env 中的 LLM_API_KEY，或改用 `python main.py search` 仅做采集")
+        logger.error("请先填写 .env 中的 LLM_API_KEY，或在 config.yaml 关闭 scoring.enabled")
         return False
 
     try:
@@ -145,6 +148,17 @@ def run_collection_task(
             logger.error("数据合并失败")
             return False
         logger.info(f"合并文件已生成: {merged_file}")
+
+        if not should_score:
+            logger.info("\n第三步：config.yaml 已关闭智能打分，本次只采集并合并数据")
+            logger.info("\n" + "=" * 60)
+            logger.info("教育热点搜集任务完成（未打分）")
+            logger.info("=" * 60)
+            logger.info("\n今日成果:")
+            logger.info(f"   - 采集内容: {len(hotspots)} 条")
+            logger.info(f"   - 合并文件: {merged_file}")
+            logger.info(f"   - 日志文件: {LOG_FILE}")
+            return True
 
         logger.info("\n第三步：开始对内容进行智能打分...")
         scorer = ContentScorer()
@@ -190,11 +204,16 @@ def run_collection_task(
         output_file = generator.generate_daily_report(top_hotspots)
         logger.info(f"日报生成成功，文件位置: {output_file}")
 
-        candidate_dir = ""
-        if LONGXIA_CANDIDATE_EXPORT_ENABLED:
-            logger.info("\n第七步：生成 longxia 人工候选 md...")
-            candidate_dir = str(LongxiaCandidateExporter().export(top_hotspots))
-            logger.info(f"longxia 候选目录: {candidate_dir}")
+        material_dir = ""
+        if MATERIAL_EXPORT_ENABLED:
+            logger.info("\n第七步：生成通用素材包...")
+            material_dir = str(
+                MaterialExporter().export(
+                    top_hotspots,
+                    source_names=selected_sources,
+                )
+            )
+            logger.info(f"素材包目录: {material_dir}")
 
         logger.info("\n" + "=" * 60)
         logger.info("教育热点搜集任务全部完成")
@@ -205,8 +224,8 @@ def run_collection_task(
         logger.info(f"   - 打分数据: {scored_file}")
         logger.info(f"   - 最终入选: {len(top_hotspots)} 条")
         logger.info(f"   - 输出文件: {output_file}")
-        if candidate_dir:
-            logger.info(f"   - longxia候选: {candidate_dir}")
+        if material_dir:
+            logger.info(f"   - 素材包: {material_dir}")
         logger.info(f"   - 最高评分: {top_hotspots[0].score:.2f}")
         logger.info(f"   - 日志文件: {LOG_FILE}")
         return True
@@ -286,6 +305,7 @@ def start_scheduler(
         kwargs={
             "sources": sources or ENABLED_SOURCES,
             "keyword_override": keyword_override,
+            "scoring_enabled": None,
         },
         trigger=CronTrigger(hour=hour, minute=minute),
         id="daily_education_hotspot",

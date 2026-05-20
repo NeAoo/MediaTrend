@@ -23,8 +23,8 @@ from models.hotspot import CONTENT_MAX_LENGTH, EducationHotspot
 class MarkdownGenerator:
     """Markdown 文档生成器"""
 
-    def __init__(self):
-        self.output_dir = Path(OUTPUT_DIR)
+    def __init__(self, output_dir: str | None = None):
+        self.output_dir = Path(output_dir or OUTPUT_DIR)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_daily_report(self, hotspots: List[EducationHotspot], date: datetime = None) -> str:

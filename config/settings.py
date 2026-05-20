@@ -108,10 +108,10 @@ MIGRATED_CONFIG_ENV_KEYS = {
     "AIHOT_USER_AGENT",
     "OUTPUT_DIR",
     "OUTPUT_FILENAME_PATTERN",
-    "LONGXIA_CANDIDATE_EXPORT_ENABLED",
-    "LONGXIA_CANDIDATE_EXPORT_DIR",
-    "LONGXIA_CANDIDATE_CONTENT_MAX_CHARS",
-    "LONGXIA_CANDIDATE_TIMEZONE",
+    "MATERIAL_EXPORT_ENABLED",
+    "MATERIAL_EXPORT_DIR",
+    "MATERIAL_CONTENT_MAX_CHARS",
+    "MATERIAL_TIMEZONE",
 }
 
 
@@ -137,22 +137,28 @@ def _time_range_hours(time_range_config) -> tuple[int, int]:
     return (time_range_config.min, time_range_config.max)
 
 
-# ==================== API 配置 ====================
+# ==================== API / 打分配置 ====================
+SCORING_ENABLED = APP_CONFIG.scoring.enabled
 LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1").strip()
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4").strip() or "gpt-5.4"
-LLM_TIMEOUT_SECONDS = max(10.0, _env_float("LLM_TIMEOUT_SECONDS", 120.0))
-LLM_MAX_RETRIES = max(0, _env_int("LLM_MAX_RETRIES", 1))
-LLM_MAX_COMPLETION_TOKENS = max(0, _env_int("LLM_MAX_COMPLETION_TOKENS", 0))
-LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "").strip()
-SCORE_WORKERS = max(1, _env_int("SCORE_WORKERS", 5))
+LLM_BASE_URL = APP_CONFIG.scoring.base_url.strip()
+LLM_MODEL = APP_CONFIG.scoring.model.strip() or "gpt-5.4"
+LLM_TIMEOUT_SECONDS = max(10.0, float(APP_CONFIG.scoring.timeout_seconds))
+LLM_MAX_RETRIES = max(0, int(APP_CONFIG.scoring.max_retries))
+LLM_MAX_COMPLETION_TOKENS = max(0, int(APP_CONFIG.scoring.max_completion_tokens))
+LLM_REASONING_EFFORT = APP_CONFIG.scoring.reasoning_effort.strip()
+SCORE_WORKERS = max(1, int(APP_CONFIG.scoring.workers))
 SCORING_PARSE_FAILURE_SCORE = max(
     1.0,
-    min(10.0, _env_float("SCORING_PARSE_FAILURE_SCORE", 1.0)),
+    min(10.0, float(APP_CONFIG.scoring.parse_failure_score)),
 )
-SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES = _env_bool(
-    "SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES",
-    True,
+SCORING_RANDOM_FALLBACK_ON_ALL_PARSE_FAILURES = (
+    APP_CONFIG.scoring.random_fallback_on_all_parse_failures
+)
+SCORING_SYSTEM_PROMPT_PATH = str(
+    APP_CONFIG.resolve_path(APP_CONFIG.scoring.prompt.system_path)
+)
+SCORING_USER_PROMPT_PATH = str(
+    APP_CONFIG.resolve_path(APP_CONFIG.scoring.prompt.user_path)
 )
 
 # ==================== 采集配置 ====================
@@ -308,19 +314,11 @@ OUTPUT_DIR = str(APP_CONFIG.resolve_path(APP_CONFIG.output.dir))
 OUTPUT_FILENAME_PATTERN = APP_CONFIG.output.filename_pattern
 OUTPUT_FORMAT = "markdown"
 
-# ==================== 私有候选投放配置（默认关闭） ====================
-LONGXIA_CANDIDATE_EXPORT_ENABLED = (
-    APP_CONFIG.output.longxia_candidate_export_enabled
-)
-LONGXIA_CANDIDATE_EXPORT_DIR = str(
-    APP_CONFIG.resolve_path(APP_CONFIG.output.longxia_candidate_export_dir)
-)
-LONGXIA_CANDIDATE_CONTENT_MAX_CHARS = (
-    APP_CONFIG.output.longxia_candidate_content_max_chars
-)
-LONGXIA_CANDIDATE_TIMEZONE = APP_CONFIG.output.longxia_candidate_timezone
-LONGXIA_SSH_TARGET = os.getenv("LONGXIA_SSH_TARGET", "").strip()
-LONGXIA_REMOTE_CANDIDATE_ROOT = os.getenv("LONGXIA_REMOTE_CANDIDATE_ROOT", "").strip()
+# ==================== 通用素材导出配置 ====================
+MATERIAL_EXPORT_ENABLED = APP_CONFIG.output.material_export_enabled
+MATERIAL_EXPORT_DIR = str(APP_CONFIG.resolve_path(APP_CONFIG.output.material_export_dir))
+MATERIAL_CONTENT_MAX_CHARS = APP_CONFIG.output.material_content_max_chars
+MATERIAL_TIMEZONE = APP_CONFIG.output.material_timezone
 
 # ==================== 调度配置 ====================
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "08:00").strip() or "08:00"

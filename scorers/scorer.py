@@ -5,7 +5,8 @@
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
-from typing import Dict, List
+from pathlib import Path
+from typing import Any, Dict, List
 
 from loguru import logger
 from openai import OpenAI
@@ -19,9 +20,49 @@ from config.settings import (
     LLM_REASONING_EFFORT,
     LLM_TIMEOUT_SECONDS,
     SCORING_PARSE_FAILURE_SCORE,
+    SCORING_SYSTEM_PROMPT_PATH,
+    SCORING_USER_PROMPT_PATH,
     SCORE_WORKERS,
 )
 from models.hotspot import EducationHotspot
+
+
+SCORING_TEMPLATE_FIELDS = {
+    "title",
+    "source",
+    "author",
+    "publish_time",
+    "url",
+    "popularity",
+    "content",
+}
+
+
+def _read_prompt_file(path: str) -> str:
+    prompt_path = Path(path)
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"评分 prompt 文件不存在: {prompt_path}")
+    content = prompt_path.read_text(encoding="utf-8").strip()
+    if not content:
+        raise ValueError(f"评分 prompt 文件为空: {prompt_path}")
+    return content
+
+
+def render_scoring_prompt(template: str, hotspot: EducationHotspot) -> str:
+    """Render known placeholders without touching JSON braces in the prompt."""
+    values: dict[str, Any] = {
+        "title": hotspot.title,
+        "source": hotspot.source,
+        "author": hotspot.author or "未知",
+        "publish_time": hotspot.publish_time.strftime("%Y-%m-%d %H:%M"),
+        "url": hotspot.url or "无",
+        "popularity": hotspot.popularity if hotspot.popularity is not None else "未知",
+        "content": hotspot.content or "",
+    }
+    rendered = template
+    for field_name in SCORING_TEMPLATE_FIELDS:
+        rendered = rendered.replace("{" + field_name + "}", str(values[field_name]))
+    return rendered
 
 
 class ContentScorer:
@@ -38,6 +79,8 @@ class ContentScorer:
             max_retries=LLM_MAX_RETRIES,
         )
         self.model = LLM_MODEL
+        self.system_prompt = _read_prompt_file(SCORING_SYSTEM_PROMPT_PATH)
+        self.user_prompt_template = _read_prompt_file(SCORING_USER_PROMPT_PATH)
 
     def score_batch(self, hotspots: List[EducationHotspot]) -> List[EducationHotspot]:
         if not hotspots:
@@ -72,70 +115,14 @@ class ContentScorer:
 
     def _score_single_item(self, hotspot: EducationHotspot, item_number: int) -> EducationHotspot:
         logger.info(f"第{item_number}条开始评分: {hotspot.title[:30]}")
-        content = hotspot.content or ""
-        prompt = f"""你是一位社会热点公众号选题评估专家，请对下面这一篇内容进行独立评分。
-
-评分目标：
-- 判断这篇内容是否值得进入“社会热点 / 公众号选题池”，核心目标是提升整体点击量和传播潜力。
-- 只评价这一篇文章，不要和其他文章做相对比较。
-- 正文最多 5000 字，必须基于标题、来源、作者/公众号、发布时间、URL、热度指标和正文综合判断。
-- 如果内容只是资料下载、纯广告、旧闻搬运、无法核查、夸张承诺，应该明显降分。
-
-评估逻辑：
-- 当前第一目标是阅读量、打开率和传播性，不再把每篇内容筛成家长教育稿。
-- 优先看当前社会热点事件、公共情绪点、争议点、反常识点、强故事性和可转成公众号长文的话题。
-- 候选文章会被 “选题池” 当作“对标母稿”：标题结构、核心热词、冲突设置、叙事顺序、段落节奏和情绪推进越值得模仿，越应该高分。
-- 不要因为话题无法自然连接到教育、孩子、家庭或智趣点读而降分；教育/家庭相关只作为弱备注，不进入核心判断。
-- 如果内容非常短，不到两百字，没有核心观点，应该明显降分。
-- 重点判断普通大众是否会点开、是否看得懂、是否愿意转发或评论。
-- 来源可以来自公众号线索，但涉及政策、医疗、教育、公共事件、具体机构和人物时，事实必须可核查。
-- 可以有爆款标题节奏和情绪张力，但不能低俗标题党、不能制造恐慌、不能夸大承诺。
-- 更偏好：热点明确、冲突/悬念清楚、信息密度高、大众共鸣强、标题有点击点、结构可拆、二次创作空间大的内容。
-
-评分维度（每项 1-10 分）：
-1. heat：热点/打开潜力。是否新、是否有社会讨论度、标题和事件是否有点击欲。
-2. authority：权威性/可核查性。来源是否可靠，事实是否明确，是否避免不可验证说法。
-3. quality：内容质量。信息是否完整、准确、有深度，有没有明显水文、软广或重复空话。
-4. resonance：大众共鸣/传播角度。是否有普遍情绪、强场景、冲突、反常识或讨论空间。
-5. timeliness：时效性。是否适合今天/最近几天发布，是否处在事件发酵窗口。
-6. reference_value：对标价值。是否适合作为后续仿写母稿，标题、开头、冲突、叙事节奏和结尾是否有可借鉴空间。
-7. risk_control：风险控制。是否避开医疗/升学/提分绝对承诺、恐吓、未经证实个案、攻击具体机构等风险。
-
-综合评分公式：
-overall = heat×0.35 + timeliness×0.18 + resonance×0.18 + reference_value×0.14 + quality×0.08 + authority×0.04 + risk_control×0.03
-
-请严格按照以下 JSON 格式返回评分结果，只返回 JSON，不要其他文字：
-{{
-  "heat": 8.5,
-  "authority": 9.0,
-  "quality": 8.0,
-  "resonance": 9.5,
-  "timeliness": 8.0,
-  "reference_value": 8.5,
-  "risk_control": 9.0,
-  "overall": 8.53,
-  "reason": "用1-2句话说明为什么值得或不值得进入候选池",
-  "best_angle": "如果值得写，说明最适合对标原文的标题/冲突/叙事角度；不值得则写不建议",
-  "risk_notes": ["需要注意的事实、合规或表达风险"]
-}}
-
-需要评分的内容：
-- 标题: {hotspot.title}
-- 来源平台: {hotspot.source}
-- 作者/公众号: {hotspot.author or '未知'}
-- 发布时间: {hotspot.publish_time.strftime('%Y-%m-%d %H:%M')}
-- URL: {hotspot.url or '无'}
-- 热度指标: {hotspot.popularity or '未知'}
-- 正文: {content}
-
-请开始评分："""
+        prompt = render_scoring_prompt(self.user_prompt_template, hotspot)
 
         from openai.types.chat import ChatCompletionMessageParam
 
         messages: list[ChatCompletionMessageParam] = [
             {
                 "role": "system",
-                "content": "你是专业的社会热点选题评估专家，擅长判断内容的点击潜力、公共讨论价值、事实可靠性和传播风险。",
+                "content": self.system_prompt,
             },
             {
                 "role": "user",

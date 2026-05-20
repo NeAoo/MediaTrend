@@ -29,6 +29,8 @@ CONFIG_VALIDATION_MODULES = {
     "yaml": "PyYAML",
     "pydantic": "pydantic",
 }
+MIN_NODE_MAJOR = 20
+MIN_NODE_MINOR_FOR_NODE_20 = 19
 LOCAL_EXAMPLE_FILES = {
     ".env": ".env.example",
     "config.yaml": "config.yaml.example",
@@ -54,23 +56,45 @@ def run_warning_command(command: list[str], check: bool, warn_message: str) -> b
     return False
 
 
-def node_major_version(raw: str) -> int | None:
+def node_version_tuple(raw: str) -> tuple[int, int] | None:
     text = raw.strip()
     if text.startswith("v"):
         text = text[1:]
-    major = text.split(".", 1)[0]
-    return int(major) if major.isdigit() else None
+    parts = text.split(".")
+    if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
+        return None
+    return (int(parts[0]), int(parts[1]))
+
+
+def node_major_version(raw: str) -> int | None:
+    version = node_version_tuple(raw)
+    return version[0] if version else None
+
+
+def is_supported_node_version(version: tuple[int, int] | None) -> bool:
+    if version is None:
+        return False
+    major, minor = version
+    if major > MIN_NODE_MAJOR:
+        return True
+    return major == MIN_NODE_MAJOR and minor >= MIN_NODE_MINOR_FOR_NODE_20
 
 
 def check_node() -> bool:
     node = shutil.which("node")
     if not node:
-        print("WARN: Node.js not found. Zhihu/TrendCrawlerRuntime may fail; install Node.js >= 16.")
+        print(
+            "WARN: Node.js not found. Web dashboard requires Node.js 20.19+ "
+            "or newer; Zhihu/TrendCrawlerRuntime also requires Node.js."
+        )
         return False
     completed = subprocess.run([node, "--version"], capture_output=True, text=True)
-    major = node_major_version(completed.stdout)
-    if major is None or major < 16:
-        print(f"WARN: Node.js >= 16 required, detected: {completed.stdout.strip()}")
+    version = node_version_tuple(completed.stdout)
+    if not is_supported_node_version(version):
+        print(
+            "WARN: Node.js 20.19+ or newer is recommended for the Web dashboard, "
+            f"detected: {completed.stdout.strip()}"
+        )
         return False
     print(f"OK: Node.js {completed.stdout.strip()}")
     return True

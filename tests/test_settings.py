@@ -39,14 +39,16 @@ zhihu:
     max_results_per_keyword: 5
 output:
   dir: ./tmp-output
-  longxia_candidate_export_enabled: false
+  material_export_enabled: false
+scoring:
+  model: test-model
 """,
         encoding="utf-8",
     )
     monkeypatch.setenv("AI_TREND_CONFIG", str(config_file))
     monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
     monkeypatch.setenv("LLM_API_KEY", "test-key")
-    monkeypatch.setenv("LLM_MODEL", "test-model")
+    monkeypatch.setenv("LLM_MODEL", "ignored-env-model")
 
     import config.settings as settings
 
@@ -62,7 +64,7 @@ output:
     assert settings.XIAOHONGSHU_KEYWORD_TIME_RANGE_HOURS == (0, 36)
     assert settings.ZHIHU_MAX_RESULTS_PER_KEYWORD == 5
     assert settings.LLM_MODEL == "test-model"
-    assert settings.LONGXIA_CANDIDATE_EXPORT_ENABLED is False
+    assert settings.MATERIAL_EXPORT_ENABLED is False
 
 
 def test_settings_warns_when_migrated_env_key_is_set(tmp_path, monkeypatch):
@@ -130,32 +132,6 @@ wechat:
     assert settings.LOG_ROTATION == "1 day"
     assert settings.LOG_RETENTION == "14 days"
     assert settings.LOG_COMPRESSION == "zip"
-
-
-def test_settings_does_not_default_private_remote_targets(tmp_path, monkeypatch):
-    config_file = tmp_path / "config.yaml"
-    config_file.write_text(
-        """
-enabled_sources:
-  - wechat_mp
-wechat:
-  account_crawl:
-    accounts:
-      - 账号A
-""",
-        encoding="utf-8",
-    )
-    monkeypatch.setenv("AI_TREND_CONFIG", str(config_file))
-    monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
-    monkeypatch.delenv("LONGXIA_SSH_TARGET", raising=False)
-    monkeypatch.delenv("LONGXIA_REMOTE_CANDIDATE_ROOT", raising=False)
-
-    import config.settings as settings
-
-    settings = importlib.reload(settings)
-
-    assert settings.LONGXIA_SSH_TARGET == ""
-    assert settings.LONGXIA_REMOTE_CANDIDATE_ROOT == ""
 
 
 def test_settings_exports_new_search_source_values(tmp_path, monkeypatch):

@@ -64,12 +64,61 @@ python scripts/bootstrap.py
 - `.env.example` -> `.env`
 - `config.yaml.example` -> `config.yaml`
 
-创建后填写自己的密钥和采集配置：
+创建后可以直接启动 Web 工作台配置；如果更习惯命令行，也可以手动编辑本地文件：
 
 ```bash
 $EDITOR .env
 $EDITOR config.yaml
 ```
+
+默认模板启用 `google_news`，并内置两个教育关键词，第一次运行不需要平台登录；切到微信公众号、小红书、知乎账号采集时，再按页面提示补账号、链接或扫码登录。
+
+## 本地 Web 工作台
+
+AITrend 可以作为本机 Web 工具使用：页面负责编辑 `config.yaml`、配置打分模型、启动采集任务、查看每个来源/关键词/账号的进度和报告产物。
+
+首次运行先安装前端依赖并构建静态页面：
+
+```bash
+cd web/frontend
+npm install
+npm run build
+cd ../..
+```
+
+然后在项目根目录启动后端：
+
+```bash
+python -m uvicorn web.backend.app:app --host 127.0.0.1 --port 8000
+```
+
+打开：
+
+```text
+http://127.0.0.1:8000
+```
+
+注意：
+
+- Web 工作台是本机工具，不带登录系统；请只绑定 `127.0.0.1`，不要直接暴露到公网或局域网。
+- “来源配置”页保存后会直接写回根目录 `config.yaml`，命令行和 Web 任务都会使用这份默认配置。
+- 任务运行中，Web 工作台会禁止重复启动任务，也会暂时禁止保存来源配置和打分 Prompt，避免中途改配置导致结果不可追溯。
+- “打分模型”页会把 Base URL、Model、并发、Prompt 路径等写入 `config.yaml`，API Key 写入 `.env` 的 `LLM_API_KEY`。
+- 关闭打分后可以只采集并合并 JSON，不需要填写 API Key。
+
+开发模式可以分两个终端运行：
+
+```bash
+# 终端 1：后端
+python -m uvicorn web.backend.app:app --host 127.0.0.1 --port 8000 --reload
+
+# 终端 2：前端
+cd web/frontend
+npm install
+npm run dev
+```
+
+开发模式打开 `http://127.0.0.1:5173`。
 
 只采集不调用大模型：
 
@@ -82,6 +131,32 @@ python main.py search
 ```bash
 python main.py run
 ```
+
+如果要把高分结果导出给下游内容生成项目，打开 `config.yaml`：
+
+```yaml
+output:
+  material_export_enabled: true
+  material_export_dir: ./output/materials
+```
+
+再次运行：
+
+```bash
+python main.py run
+```
+
+导出结构：
+
+```text
+output/materials/YYYY-MM-DD/
+  manifest.json
+  candidates/
+    001.md
+    001.json
+```
+
+`manifest.json` 是下游项目读取素材的入口；`candidates/*.md` 保存可直接注入生成 prompt 的正文和评分信息。
 
 定时模式：
 
@@ -104,14 +179,14 @@ python main.py start
 
 ```env
 LLM_API_KEY=your_api_key
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL=gpt-5.4
 SOGOU_WECHAT_COOKIE=
 XIAOHONGSHU_COOKIE=
 ZHIHU_COOKIE=
 GOOGLE_NEWS_PROXY_URL=
 LOG_LEVEL=INFO
 ```
+
+打分的 Base URL、Model、超时时间、并发数和 Prompt 路径都在 `config.yaml` 的 `scoring` 节里配置，也可以在 Web 工作台的“打分模型”页面修改。
 
 一个最小的微信公众号账号配置：
 
@@ -125,6 +200,7 @@ wechat:
       - 中国教育报
       - 人民教育
     max_results_per_account: 10
+    expected_min_results: 3
     time_range_hours:
       min: 0
       max: 168
@@ -192,6 +268,7 @@ python scripts/search_zhihu_creator.py -c 'https://www.zhihu.com/people/URL_TOKE
 
 - `requirements.txt`：AITrend 主程序依赖。
 - `TrendCrawlerRuntime/requirements.txt`：TrendCrawlerRuntime 自己的依赖，只有小红书和知乎链路需要。
+- `web/frontend/package.json`：Web 工作台前端依赖。建议使用 Node.js 20.19+ 或 22.12+。
 
 不要手动安装多个根目录 requirements。统一运行：
 
