@@ -105,7 +105,7 @@ http://127.0.0.1:8000
 - 任务运行中，Web 工作台会禁止重复启动任务，也会暂时禁止保存来源配置和打分 Prompt，避免中途改配置导致结果不可追溯。
 - “模型配置”页会把正文打分模型和全网热榜分类模型分开保存；两者共用 `.env` 的 `LLM_API_KEY`，但 Base URL、Model、并发和 Prompt 路径分别写入 `config.yaml` 的 `scoring` 与 `hotrank.ai_classification`。
 - “全网热榜”页只在点击“刷新热榜”后调用 CimiData `/api/v3/hotrank`，需要在 `.env` 配置 `CIMIDATA_APP_ID` 和 `CIMIDATA_APP_SECRET`；热榜刷新会显示拉取、AI 分类、保存进度，快照保存在 `web_jobs/hotrank/`。
-- 关闭打分后可以只采集并合并 JSON，不需要填写 API Key。
+- 默认只采集并合并 JSON，不需要填写 API Key；需要评分报告时再到“模型配置”页打开正文打分。
 
 开发模式可以分两个终端运行：
 

@@ -195,7 +195,7 @@ aihot:
 # API Key 属于密钥，写在 .env 的 LLM_API_KEY，不写在这里。
 # 用途：采集完成后，对每篇候选内容做教育热点综合评分。
 scoring:
-  enabled: true
+  enabled: false
   base_url: https://api.openai.com/v1
   model: gpt-5.4
   timeout_seconds: 120
@@ -228,11 +228,11 @@ hotrank:
 
 # ==================== Web 工作台默认值 ====================
 # default_execution_mode: parallel = 多来源并行；serial = 一个来源跑完再跑下一个。
-# default_run_mode: collect_score_report = 采集+打分；collect_only = 只采集和合并。
+# default_run_mode: collect_only = 只采集和合并；collect_score_report = 采集+打分。
 # unit_timeout_seconds = 单个关键词/账号的最长运行时间；超时后跳过这个单元继续后续来源。
 web:
   default_execution_mode: parallel
-  default_run_mode: collect_score_report
+  default_run_mode: collect_only
   unit_timeout_seconds: 180
 
 # ==================== 输出 ====================

@@ -160,7 +160,7 @@ class ScoringPromptConfig(BaseModel):
 
 
 class ScoringConfig(BaseModel):
-    enabled: bool = True
+    enabled: bool = False
     base_url: str = "https://api.openai.com/v1"
     model: str = "gpt-5.4"
     timeout_seconds: float = Field(120.0, ge=10)
@@ -199,7 +199,7 @@ class HotrankConfig(BaseModel):
 
 
 class WebConfig(BaseModel):
-    default_run_mode: RunMode = "collect_score_report"
+    default_run_mode: RunMode = "collect_only"
     default_execution_mode: ExecutionMode = "parallel"
     unit_timeout_seconds: int = Field(180, ge=30)
 
