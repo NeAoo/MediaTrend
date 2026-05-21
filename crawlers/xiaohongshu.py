@@ -5,10 +5,14 @@
 
 import json
 import os
+import re
+import signal
 import subprocess
 from datetime import datetime
 from typing import List, Optional
+from urllib.parse import urlparse
 
+import requests
 from loguru import logger
 
 from config.settings import (
@@ -24,8 +28,14 @@ from config.settings import (
     XIAOHONGSHU_MAX_RESULTS_PER_ACCOUNT,
     XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD,
 )
-from crawlers.base import BaseCrawler
+from crawlers.base import BaseCrawler, resolve_query_lookback_hours
 from models.hotspot import CollectionResult, EducationHotspot
+
+
+SHORT_LINK_DOMAINS = ("xhslink.com", "xhsurl.com")
+SHARE_URL_PATTERN = re.compile(r"https?://[^\s<>'\"，。；、]+")
+TRAILING_URL_PUNCTUATION = ".,，。；;、）)]}>》\"'"
+SHORT_LINK_TIMEOUT_SECONDS = 15
 
 
 class XiaohongshuCrawler(BaseCrawler):
@@ -42,11 +52,13 @@ class XiaohongshuCrawler(BaseCrawler):
         time_range_hours: tuple | None = None,
         creator_urls: List[str] | None = None,
         creator_time_range_hours: tuple | None = None,
+        runtime_timeout_seconds: int | None = None,
     ) -> CollectionResult:
         selected_keywords = keywords or []
         selected_creator_urls = (
             XIAOHONGSHU_CREATOR_URLS if creator_urls is None else creator_urls
         )
+        selected_creator_urls = self._normalize_creator_urls(selected_creator_urls)
         if not selected_keywords and not selected_creator_urls:
             logger.warning("未配置小红书关键词或账号 URL，无法采集")
             return CollectionResult()
@@ -62,6 +74,7 @@ class XiaohongshuCrawler(BaseCrawler):
         )
         keyword_max_hours = self._max_hours(keyword_time_range)
         account_max_hours = self._max_hours(account_time_range)
+        runtime_timeout = runtime_timeout_seconds or TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS
         hotspots: list[EducationHotspot] = []
 
         logger.info("开始从小红书采集教育热点...")
@@ -83,7 +96,7 @@ class XiaohongshuCrawler(BaseCrawler):
                     items=selected_keywords,
                     max_count=XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD,
                     time_range_hours=keyword_max_hours,
-                    timeout=TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS,
+                    timeout=runtime_timeout,
                 )
                 if success:
                     hotspots.extend(
@@ -103,7 +116,7 @@ class XiaohongshuCrawler(BaseCrawler):
                     items=selected_creator_urls,
                     max_count=XIAOHONGSHU_MAX_RESULTS_PER_ACCOUNT,
                     time_range_hours=account_max_hours,
-                    timeout=TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS,
+                    timeout=runtime_timeout,
                 )
                 if success:
                     hotspots.extend(
@@ -125,6 +138,66 @@ class XiaohongshuCrawler(BaseCrawler):
             result.error_messages.append(str(exc))
 
         return result
+
+    def _normalize_creator_urls(self, creator_urls: List[str]) -> List[str]:
+        """Accept raw share text, short links, profile URLs, or pure user IDs."""
+        normalized_urls: list[str] = []
+        seen_urls: set[str] = set()
+        for raw_value in creator_urls:
+            candidates = self._extract_creator_url_candidates(raw_value)
+            for candidate_url in candidates:
+                final_url = self._expand_short_creator_url(candidate_url)
+                if final_url not in seen_urls:
+                    normalized_urls.append(final_url)
+                    seen_urls.add(final_url)
+        return normalized_urls
+
+    def _extract_creator_url_candidates(self, raw_value: str) -> list[str]:
+        stripped_value = raw_value.strip()
+        if not stripped_value:
+            return []
+        matched_urls = [
+            match.group(0).rstrip(TRAILING_URL_PUNCTUATION)
+            for match in SHARE_URL_PATTERN.finditer(stripped_value)
+        ]
+        if matched_urls:
+            return matched_urls
+        is_pure_user_id = len(stripped_value) == 24 and all(
+            char in "0123456789abcdef" for char in stripped_value
+        )
+        if is_pure_user_id:
+            return [stripped_value]
+        logger.warning(f"无法从小红书账号输入中提取 URL 或 user_id: {raw_value}")
+        return []
+
+    def _expand_short_creator_url(self, candidate_url: str) -> str:
+        parsed_url = urlparse(candidate_url)
+        host = parsed_url.netloc.lower()
+        if not any(host == domain or host.endswith(f".{domain}") for domain in SHORT_LINK_DOMAINS):
+            return candidate_url
+
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/128.0.0.0 Safari/537.36"
+            )
+        }
+        try:
+            response = requests.get(
+                candidate_url,
+                allow_redirects=True,
+                timeout=SHORT_LINK_TIMEOUT_SECONDS,
+                headers=headers,
+            )
+            response.raise_for_status()
+            logger.info(f"小红书短链已展开: {candidate_url} -> {response.url}")
+            return response.url
+        except requests.RequestException as exc:
+            logger.warning(
+                f"小红书短链展开失败，保留原始 URL: {candidate_url}, error={exc}"
+            )
+            return candidate_url
 
     def parse_item(self, raw_data: dict) -> EducationHotspot:
         try:
@@ -239,23 +312,40 @@ class XiaohongshuCrawler(BaseCrawler):
             logger.info(f"采集数量上限: {max_count}")
             logger.info(f"执行 TrendCrawlerRuntime 小红书 {mode}: {' '.join(cmd)}")
 
-            completed = subprocess.run(
+            process = subprocess.Popen(
                 cmd,
                 cwd=self.trendcrawler_dir,
                 env=env,
-                capture_output=False,
+                start_new_session=(os.name != "nt"),
                 text=True,
-                timeout=timeout,
             )
-            if completed.returncode != 0:
-                logger.error(f"TrendCrawlerRuntime 返回非 0 退出码: {completed.returncode}")
-            return completed.returncode == 0
+            return_code = process.wait(timeout=timeout)
+            if return_code != 0:
+                logger.error(f"TrendCrawlerRuntime 返回非 0 退出码: {return_code}")
+            return return_code == 0
         except subprocess.TimeoutExpired:
+            self._terminate_process_tree(process)
             logger.error(f"小红书 {mode} 执行超时（{timeout / 60:.1f} 分钟）")
             return False
         except Exception as exc:
             logger.error(f"小红书 {mode} 执行异常: {exc}")
             return False
+
+    def _terminate_process_tree(self, process: subprocess.Popen) -> None:
+        try:
+            if os.name == "nt":
+                process.kill()
+            else:
+                os.killpg(process.pid, signal.SIGTERM)
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            if os.name == "nt":
+                process.kill()
+            else:
+                os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=5)
+        except ProcessLookupError:
+            return
 
     def _load_and_convert_data(
         self,
@@ -312,7 +402,11 @@ class XiaohongshuCrawler(BaseCrawler):
 
     def _max_hours(self, time_range_hours: tuple[int, int] | int) -> int:
         if isinstance(time_range_hours, tuple):
-            return time_range_hours[1]
+            return resolve_query_lookback_hours(
+                datetime.now(),
+                time_range_hours[0],
+                time_range_hours[1],
+            )
         return int(time_range_hours)
 
     def _normalize_time_range(

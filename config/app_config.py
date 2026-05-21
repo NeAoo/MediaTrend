@@ -21,6 +21,8 @@ LoginType = Literal["qrcode", "cookie", "phone"]
 BrowserMode = Literal["auto", "visible", "headless"]
 AihotMode = Literal["selected", "all"]
 AihotCategory = Literal["ai-models", "ai-products", "industry", "paper", "tip"]
+RunMode = Literal["collect_only", "collect_score_report"]
+ExecutionMode = Literal["serial", "parallel"]
 
 
 class ConfigValidationError(ValueError):
@@ -64,6 +66,7 @@ class TrendCrawlerRuntimeConfig(BaseModel):
 
 
 class KeywordSearchConfig(BaseModel):
+    enabled: bool = True
     keywords: list[str] = Field(default_factory=list)
     max_results_per_keyword: int = Field(20, ge=1)
     expected_min_results: int = Field(3, ge=0)
@@ -77,6 +80,7 @@ class WechatKeywordSearchConfig(KeywordSearchConfig):
 
 
 class WechatAccountCrawlConfig(BaseModel):
+    enabled: bool = True
     accounts: list[str] = Field(default_factory=list)
     max_results_per_account: int = Field(10, ge=1)
     expected_min_results: int = Field(3, ge=0)
@@ -92,6 +96,7 @@ class WechatAccountCrawlConfig(BaseModel):
 
 
 class CreatorAccountCrawlConfig(BaseModel):
+    enabled: bool = True
     creator_urls: list[str] = Field(default_factory=list)
     max_results_per_account: int = Field(20, ge=1)
     expected_min_results: int = Field(3, ge=0)
@@ -168,6 +173,37 @@ class ScoringConfig(BaseModel):
     prompt: ScoringPromptConfig = Field(default_factory=ScoringPromptConfig)
 
 
+class HotrankAiClassificationPromptConfig(BaseModel):
+    system_path: str = "./prompts/hotrank_classification_system_prompt.md"
+    user_path: str = "./prompts/hotrank_classification_user_prompt.md"
+
+
+class HotrankAiClassificationConfig(BaseModel):
+    enabled: bool = True
+    base_url: str = "https://api.openai.com/v1"
+    model: str = "gpt-5.4"
+    workers: int = Field(32, ge=1, le=64)
+    timeout_seconds: float = Field(120.0, ge=10)
+    max_retries: int = Field(1, ge=0)
+    max_completion_tokens: int = Field(80, ge=0)
+    reasoning_effort: str = ""
+    prompt: HotrankAiClassificationPromptConfig = Field(
+        default_factory=HotrankAiClassificationPromptConfig
+    )
+
+
+class HotrankConfig(BaseModel):
+    ai_classification: HotrankAiClassificationConfig = Field(
+        default_factory=HotrankAiClassificationConfig
+    )
+
+
+class WebConfig(BaseModel):
+    default_run_mode: RunMode = "collect_score_report"
+    default_execution_mode: ExecutionMode = "parallel"
+    unit_timeout_seconds: int = Field(180, ge=30)
+
+
 class AppConfig(BaseModel):
     enabled_sources: list[str] = Field(
         default_factory=lambda: list(DEFAULT_ENABLED_SOURCES)
@@ -183,6 +219,8 @@ class AppConfig(BaseModel):
     google_news: GoogleNewsConfig = Field(default_factory=GoogleNewsConfig)
     aihot: AihotConfig = Field(default_factory=AihotConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
+    hotrank: HotrankConfig = Field(default_factory=HotrankConfig)
+    web: WebConfig = Field(default_factory=WebConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
 
     @model_validator(mode="after")
@@ -196,35 +234,60 @@ class AppConfig(BaseModel):
                 f"{', '.join(unsupported)}. Supported sources: "
                 f"{', '.join(sorted(SUPPORTED_SOURCES))}"
             )
-        if "wechat" in self.enabled_sources and not self.wechat.keyword_search.keywords:
+        if (
+            "wechat" in self.enabled_sources
+            and (
+                not self.wechat.keyword_search.enabled
+                or not self.wechat.keyword_search.keywords
+            )
+        ):
             raise ValueError(
-                "wechat enabled but wechat.keyword_search.keywords is empty"
+                "wechat enabled but wechat.keyword_search is disabled or keywords is empty"
             )
         if (
             "wechat_mp" in self.enabled_sources
-            and not self.wechat.account_crawl.accounts
+            and (
+                not self.wechat.account_crawl.enabled
+                or not self.wechat.account_crawl.accounts
+            )
         ):
             raise ValueError(
-                "wechat_mp enabled but wechat.account_crawl.accounts is empty"
+                "wechat_mp enabled but wechat.account_crawl is disabled or accounts is empty"
             )
+        xiaohongshu_keyword_enabled = (
+            self.xiaohongshu.keyword_search.enabled
+            and self.xiaohongshu.keyword_search.keywords
+        )
+        xiaohongshu_account_enabled = (
+            self.xiaohongshu.account_crawl.enabled
+            and self.xiaohongshu.account_crawl.creator_urls
+        )
         if (
             "xiaohongshu" in self.enabled_sources
-            and not self.xiaohongshu.keyword_search.keywords
-            and not self.xiaohongshu.account_crawl.creator_urls
+            and not xiaohongshu_keyword_enabled
+            and not xiaohongshu_account_enabled
         ):
             raise ValueError(
                 "xiaohongshu enabled but both "
-                "xiaohongshu.keyword_search.keywords and "
-                "xiaohongshu.account_crawl.creator_urls are empty"
+                "enabled keyword_search.keywords and "
+                "enabled account_crawl.creator_urls are empty"
             )
+        zhihu_keyword_enabled = (
+            self.zhihu.keyword_search.enabled
+            and self.zhihu.keyword_search.keywords
+        )
+        zhihu_account_enabled = (
+            self.zhihu.account_crawl.enabled
+            and self.zhihu.account_crawl.creator_urls
+        )
         if (
             "zhihu" in self.enabled_sources
-            and not self.zhihu.keyword_search.keywords
-            and not self.zhihu.account_crawl.creator_urls
+            and not zhihu_keyword_enabled
+            and not zhihu_account_enabled
         ):
             raise ValueError(
-                "zhihu enabled but both zhihu.keyword_search.keywords and "
-                "zhihu.account_crawl.creator_urls are empty"
+                "zhihu enabled but both enabled zhihu.keyword_search.keywords and "
+                "enabled zhihu.account_crawl.creator_urls are empty"
             )
         if "google_news" in self.enabled_sources and not self.google_news.keywords:
             raise ValueError("google_news enabled but google_news.keywords is empty")

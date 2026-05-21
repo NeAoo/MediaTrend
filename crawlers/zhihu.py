@@ -5,6 +5,7 @@
 
 import json
 import os
+import signal
 import subprocess
 from datetime import datetime
 from typing import List
@@ -24,7 +25,7 @@ from config.settings import (
     ZHIHU_MAX_RESULTS_PER_ACCOUNT,
     ZHIHU_MAX_RESULTS_PER_KEYWORD,
 )
-from crawlers.base import BaseCrawler
+from crawlers.base import BaseCrawler, resolve_query_lookback_hours
 from models.hotspot import CollectionResult, EducationHotspot
 
 
@@ -42,6 +43,7 @@ class ZhihuCrawler(BaseCrawler):
         time_range_hours: tuple | None = None,
         creator_urls: List[str] | None = None,
         creator_time_range_hours: tuple | None = None,
+        runtime_timeout_seconds: int | None = None,
     ) -> CollectionResult:
         selected_keywords = keywords or []
         selected_creator_urls = (
@@ -62,6 +64,7 @@ class ZhihuCrawler(BaseCrawler):
         )
         keyword_max_hours = self._max_hours(keyword_time_range)
         account_max_hours = self._max_hours(account_time_range)
+        runtime_timeout = runtime_timeout_seconds or TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS
         hotspots: list[EducationHotspot] = []
 
         logger.info("开始从知乎采集教育热点...")
@@ -83,7 +86,7 @@ class ZhihuCrawler(BaseCrawler):
                     items=selected_keywords,
                     max_count=ZHIHU_MAX_RESULTS_PER_KEYWORD,
                     time_range_hours=keyword_max_hours,
-                    timeout=TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS,
+                    timeout=runtime_timeout,
                 )
                 if success:
                     hotspots.extend(
@@ -103,7 +106,7 @@ class ZhihuCrawler(BaseCrawler):
                     items=selected_creator_urls,
                     max_count=ZHIHU_MAX_RESULTS_PER_ACCOUNT,
                     time_range_hours=account_max_hours,
-                    timeout=TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS,
+                    timeout=runtime_timeout,
                 )
                 if success:
                     hotspots.extend(
@@ -219,23 +222,40 @@ class ZhihuCrawler(BaseCrawler):
             logger.info(f"采集数量上限: {max_count}")
             logger.info(f"执行 TrendCrawlerRuntime 知乎 {mode}: {' '.join(cmd)}")
 
-            completed = subprocess.run(
+            process = subprocess.Popen(
                 cmd,
                 cwd=self.trendcrawler_dir,
                 env=env,
-                capture_output=False,
+                start_new_session=(os.name != "nt"),
                 text=True,
-                timeout=timeout,
             )
-            if completed.returncode != 0:
-                logger.error(f"TrendCrawlerRuntime 返回非 0 退出码: {completed.returncode}")
-            return completed.returncode == 0
+            return_code = process.wait(timeout=timeout)
+            if return_code != 0:
+                logger.error(f"TrendCrawlerRuntime 返回非 0 退出码: {return_code}")
+            return return_code == 0
         except subprocess.TimeoutExpired:
+            self._terminate_process_tree(process)
             logger.error(f"知乎 {mode} 执行超时（{timeout / 60:.1f} 分钟）")
             return False
         except Exception as exc:
             logger.error(f"知乎 {mode} 执行异常: {exc}")
             return False
+
+    def _terminate_process_tree(self, process: subprocess.Popen) -> None:
+        try:
+            if os.name == "nt":
+                process.kill()
+            else:
+                os.killpg(process.pid, signal.SIGTERM)
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            if os.name == "nt":
+                process.kill()
+            else:
+                os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=5)
+        except ProcessLookupError:
+            return
 
     def _load_and_convert_data(
         self,
@@ -292,7 +312,11 @@ class ZhihuCrawler(BaseCrawler):
 
     def _max_hours(self, time_range_hours: tuple[int, int] | int) -> int:
         if isinstance(time_range_hours, tuple):
-            return time_range_hours[1]
+            return resolve_query_lookback_hours(
+                datetime.now(),
+                time_range_hours[0],
+                time_range_hours[1],
+            )
         return int(time_range_hours)
 
     def _normalize_time_range(

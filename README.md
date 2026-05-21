@@ -103,7 +103,8 @@ http://127.0.0.1:8000
 - Web 工作台是本机工具，不带登录系统；请只绑定 `127.0.0.1`，不要直接暴露到公网或局域网。
 - “来源配置”页保存后会直接写回根目录 `config.yaml`，命令行和 Web 任务都会使用这份默认配置。
 - 任务运行中，Web 工作台会禁止重复启动任务，也会暂时禁止保存来源配置和打分 Prompt，避免中途改配置导致结果不可追溯。
-- “打分模型”页会把 Base URL、Model、并发、Prompt 路径等写入 `config.yaml`，API Key 写入 `.env` 的 `LLM_API_KEY`。
+- “模型配置”页会把正文打分模型和全网热榜分类模型分开保存；两者共用 `.env` 的 `LLM_API_KEY`，但 Base URL、Model、并发和 Prompt 路径分别写入 `config.yaml` 的 `scoring` 与 `hotrank.ai_classification`。
+- “全网热榜”页只在点击“刷新热榜”后调用 CimiData `/api/v3/hotrank`，需要在 `.env` 配置 `CIMIDATA_APP_ID` 和 `CIMIDATA_APP_SECRET`；热榜刷新会显示拉取、AI 分类、保存进度，快照保存在 `web_jobs/hotrank/`。
 - 关闭打分后可以只采集并合并 JSON，不需要填写 API Key。
 
 开发模式可以分两个终端运行：
@@ -186,7 +187,9 @@ GOOGLE_NEWS_PROXY_URL=
 LOG_LEVEL=INFO
 ```
 
-打分的 Base URL、Model、超时时间、并发数和 Prompt 路径都在 `config.yaml` 的 `scoring` 节里配置，也可以在 Web 工作台的“打分模型”页面修改。
+正文打分的 Base URL、Model、超时时间、并发数和 Prompt 路径都在 `config.yaml` 的 `scoring` 节里配置，也可以在 Web 工作台的“模型配置”页面修改。
+
+全网热榜主题分类使用单独模型参数和单独 Prompt，配置在 `config.yaml` 的 `hotrank.ai_classification` 节；它只复用 `.env` 里的 `LLM_API_KEY`，不复用 `scoring.model`。
 
 一个最小的微信公众号账号配置：
 

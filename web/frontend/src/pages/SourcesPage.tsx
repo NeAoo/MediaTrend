@@ -3,7 +3,65 @@ import { Save } from 'lucide-react';
 import { SourceConfigEditor } from '../components/SourceConfigEditor';
 import type { AnyConfig } from '../types';
 
-const sources = ['wechat', 'wechat_mp', 'xiaohongshu', 'zhihu', 'google_news', 'aihot'];
+const sources = ['wechat', 'xiaohongshu', 'zhihu', 'google_news', 'aihot'];
+const sourceLabels: Record<string, string> = {
+  wechat: '微信',
+  xiaohongshu: '小红书',
+  zhihu: '知乎',
+  google_news: 'Google News',
+  aihot: 'AI HOT',
+};
+
+function normalizeActiveSource(source: string | undefined) {
+  if (source === 'wechat_mp') return 'wechat';
+  return source && sources.includes(source) ? source : 'google_news';
+}
+
+function normalizeConfigBeforeSave(config: AnyConfig) {
+  const next = structuredClone(config);
+  const enabledSources = new Set<string>(next.enabled_sources || []);
+  const modeEnabled = (value: AnyConfig | undefined) => value?.enabled !== false;
+  const hasActiveCreatorSource = (source: 'xiaohongshu' | 'zhihu') => {
+    const sourceConfig = next[source] || {};
+    const keywordActive = (
+      modeEnabled(sourceConfig.keyword_search)
+      && Boolean(sourceConfig.keyword_search?.keywords?.length)
+    );
+    const accountActive = (
+      modeEnabled(sourceConfig.account_crawl)
+      && Boolean(sourceConfig.account_crawl?.creator_urls?.length)
+    );
+    return keywordActive || accountActive;
+  };
+
+  const hasWechatEnabled = enabledSources.has('wechat') || enabledSources.has('wechat_mp');
+  if (hasWechatEnabled) {
+    enabledSources.delete('wechat');
+    enabledSources.delete('wechat_mp');
+    if (
+      modeEnabled(next.wechat?.keyword_search)
+      && next.wechat?.keyword_search?.keywords?.length
+    ) enabledSources.add('wechat');
+    if (
+      modeEnabled(next.wechat?.account_crawl)
+      && next.wechat?.account_crawl?.accounts?.length
+    ) enabledSources.add('wechat_mp');
+  }
+
+  for (const creatorSource of ['xiaohongshu', 'zhihu'] as const) {
+    if (enabledSources.has(creatorSource) && !hasActiveCreatorSource(creatorSource)) {
+      enabledSources.delete(creatorSource);
+    }
+  }
+
+  if (next.aihot) {
+    next.aihot.mode = 'selected';
+    next.aihot.keywords = [];
+    next.aihot.categories = [];
+  }
+  next.enabled_sources = Array.from(enabledSources);
+  return next;
+}
 
 export function SourcesPage({
   config,
@@ -15,7 +73,7 @@ export function SourcesPage({
   onSave: (config: AnyConfig) => Promise<unknown>;
 }) {
   const [draft, setDraft] = useState<AnyConfig>(() => structuredClone(config));
-  const [activeSource, setActiveSource] = useState(config.enabled_sources?.[0] || 'google_news');
+  const [activeSource, setActiveSource] = useState(normalizeActiveSource(config.enabled_sources?.[0]));
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'warning' | 'error'>('success');
 
@@ -27,7 +85,9 @@ export function SourcesPage({
       return;
     }
     try {
-      await onSave(draft);
+      const normalizedDraft = normalizeConfigBeforeSave(draft);
+      await onSave(normalizedDraft);
+      setDraft(normalizedDraft);
       setMessageType('success');
       setMessage('已写回根目录 config.yaml');
     } catch (err) {
@@ -53,7 +113,7 @@ export function SourcesPage({
         <aside className="source-tabs">
           {sources.map((source) => (
             <button className={activeSource === source ? 'active' : ''} key={source} onClick={() => setActiveSource(source)} type="button">
-              {source}
+              {sourceLabels[source] || source}
             </button>
           ))}
         </aside>

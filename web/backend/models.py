@@ -64,6 +64,7 @@ class JobSnapshot(BaseModel):
     execution_mode: ExecutionMode
     created_at: str
     updated_at: str
+    cancel_requested: bool = False
     events_count: int = 0
     artifacts: dict[str, Any] = Field(default_factory=dict)
     errors: list[str] = Field(default_factory=list)

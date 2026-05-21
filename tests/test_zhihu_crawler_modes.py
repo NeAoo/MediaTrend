@@ -24,12 +24,13 @@ def test_zhihu_runs_search_and_creator_modes(monkeypatch):
         ["教育改革"],
         time_range_hours=(0, 24),
         creator_time_range_hours=(0, 168),
+        runtime_timeout_seconds=120,
     )
 
     assert result.success_count == 0
     assert commands == [
-        ("search", ["教育改革"], 8, 24, 900),
-        ("creator", [creator_url], 6, 168, 900),
+        ("search", ["教育改革"], 8, 24, 120),
+        ("creator", [creator_url], 6, 168, 120),
     ]
 
 

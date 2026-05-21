@@ -17,7 +17,7 @@ from config.settings import (
     AIHOT_REQUEST_TIMEOUT_SECONDS,
     AIHOT_USER_AGENT,
 )
-from crawlers.base import BaseCrawler
+from crawlers.base import BaseCrawler, resolve_query_lookback_hours
 from models.hotspot import CollectionResult, EducationHotspot
 
 
@@ -183,10 +183,15 @@ class AihotCrawler(BaseCrawler):
     def _since_iso(self, time_range_hours: tuple[int, int] | None) -> str | None:
         if not time_range_hours:
             return None
-        max_hours = int(time_range_hours[1])
-        if max_hours <= 0:
+        now = datetime.now(timezone.utc)
+        lookback_hours = resolve_query_lookback_hours(
+            now.replace(tzinfo=None),
+            time_range_hours[0],
+            time_range_hours[1],
+        )
+        if lookback_hours <= 0:
             return None
-        since = datetime.now(timezone.utc) - timedelta(hours=max_hours)
+        since = now - timedelta(hours=lookback_hours)
         return since.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     def _query_label(self, query: dict[str, str | None]) -> str:

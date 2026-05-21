@@ -8,8 +8,7 @@ from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, StreamingResponse
 
 from config.app_config import load_app_config
 from web.backend.config_service import (
@@ -21,6 +20,8 @@ from web.backend.config_service import (
     write_validated_config,
 )
 from web.backend.env_service import mask_secret, read_env_value, write_env_value
+from web.backend.auth_service import SourceAuthManager, list_source_auth_states, source_auth_state
+from web.backend.hotrank_routes import router as hotrank_router
 from web.backend.job_runner import run_web_job
 from web.backend.job_store import JobStore
 from web.backend.models import (
@@ -52,6 +53,8 @@ app.add_middleware(
 )
 
 job_store = JobStore(JOBS_ROOT)
+auth_manager = SourceAuthManager()
+app.include_router(hotrank_router)
 
 
 def _http_error(exc: Exception) -> HTTPException:
@@ -201,9 +204,64 @@ def get_job(job_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="任务不存在") from exc
 
 
+@app.post("/api/jobs/{job_id}/cancel")
+def cancel_job(job_id: str) -> dict[str, Any]:
+    try:
+        snapshot = job_store.load_job(job_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="任务不存在") from exc
+    if snapshot.status in {"succeeded", "failed", "cancelled"}:
+        return snapshot.model_dump()
+    if not snapshot.cancel_requested:
+        job_store.request_cancel(job_id)
+        job_store.append_event(
+            job_id,
+            type="cancel_requested",
+            unit_type="stage",
+            unit_name="job",
+            status="running",
+            message="已请求取消，当前采集步骤结束后停止。",
+        )
+    return job_store.load_job(job_id).model_dump()
+
+
 @app.get("/api/jobs/{job_id}/events")
 def get_job_events(job_id: str, start: int = 0) -> list[dict[str, Any]]:
     return [event.model_dump() for event in job_store.read_events(job_id, start=start)]
+
+
+@app.get("/api/auth/sources")
+def get_source_auth_states() -> list[dict[str, Any]]:
+    return list_source_auth_states(CONFIG_PATH)
+
+
+@app.get("/api/auth/sources/{source}")
+def get_source_auth_state(source: str) -> dict[str, Any]:
+    return source_auth_state(source, CONFIG_PATH)
+
+
+@app.post("/api/auth/sources/{source}/login")
+async def start_source_login(source: str) -> dict[str, Any]:
+    try:
+        return await auth_manager.start_login(source, CONFIG_PATH)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"启动登录失败：{exc}") from exc
+
+
+@app.get("/api/auth/sources/{source}/login")
+async def poll_source_login(source: str) -> dict[str, Any]:
+    try:
+        return await auth_manager.poll_login(source, CONFIG_PATH)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"检查登录失败：{exc}") from exc
+
+
+@app.post("/api/auth/sources/{source}/login/finish")
+async def finish_source_login(source: str) -> dict[str, Any]:
+    try:
+        return await auth_manager.finish_login(source, CONFIG_PATH)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"保存登录状态失败：{exc}") from exc
 
 
 @app.get("/api/jobs/{job_id}/stream")
@@ -256,4 +314,16 @@ def get_system_status() -> SystemStatus:
 
 
 if FRONTEND_DIST.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_frontend(full_path: str):
+        frontend_root = FRONTEND_DIST.resolve()
+        requested_path = (FRONTEND_DIST / full_path).resolve()
+        try:
+            requested_path.relative_to(frontend_root)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail="前端资源不存在") from exc
+        if requested_path.is_file():
+            return FileResponse(requested_path)
+        if full_path.startswith("assets/"):
+            raise HTTPException(status_code=404, detail="前端资源不存在")
+        return FileResponse(FRONTEND_DIST / "index.html")

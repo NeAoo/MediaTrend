@@ -61,6 +61,15 @@ class JobStore:
         self.save_job(updated)
         return updated
 
+    def is_cancel_requested(self, job_id: str) -> bool:
+        return self.load_job(job_id).cancel_requested
+
+    def request_cancel(self, job_id: str) -> JobSnapshot:
+        snapshot = self.load_job(job_id)
+        if snapshot.status in {"succeeded", "failed", "cancelled"}:
+            return snapshot
+        return self.update_job(snapshot, cancel_requested=True)
+
     def append_event(self, job_id: str, **event_fields) -> JobEvent:
         event = JobEvent(job_id=job_id, created_at=utc_now_iso(), **event_fields)
         event_path = self.job_dir(job_id) / "events.jsonl"

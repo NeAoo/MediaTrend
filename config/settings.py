@@ -171,7 +171,12 @@ TIME_RANGE_MAX = APP_CONFIG.collection.time_range_hours.max
 ENABLED_SOURCES = APP_CONFIG.enabled_sources
 
 # ==================== 搜狗微信关键词搜索 ====================
-WECHAT_SEARCH_KEYWORDS = APP_CONFIG.wechat.keyword_search.keywords
+WECHAT_KEYWORD_SEARCH_ENABLED = APP_CONFIG.wechat.keyword_search.enabled
+WECHAT_SEARCH_KEYWORDS = (
+    APP_CONFIG.wechat.keyword_search.keywords
+    if WECHAT_KEYWORD_SEARCH_ENABLED
+    else []
+)
 SOGOU_WECHAT_COOKIE = os.getenv("SOGOU_WECHAT_COOKIE", "").strip()
 WECHAT_MAX_RESULTS_PER_KEYWORD = (
     APP_CONFIG.wechat.keyword_search.max_results_per_keyword
@@ -183,7 +188,12 @@ WECHAT_USE_PLAYWRIGHT = APP_CONFIG.wechat.keyword_search.use_playwright
 WECHAT_FETCH_DETAIL_PAGE = APP_CONFIG.wechat.keyword_search.fetch_detail_page
 
 # ==================== 微信公众平台后台采集 ====================
-WECHAT_MP_ACCOUNTS = APP_CONFIG.wechat.account_crawl.accounts
+WECHAT_ACCOUNT_CRAWL_ENABLED = APP_CONFIG.wechat.account_crawl.enabled
+WECHAT_MP_ACCOUNTS = (
+    APP_CONFIG.wechat.account_crawl.accounts
+    if WECHAT_ACCOUNT_CRAWL_ENABLED
+    else []
+)
 WECHAT_MP_MAX_ARTICLES_PER_ACCOUNT = (
     APP_CONFIG.wechat.account_crawl.max_results_per_account
 )
@@ -236,14 +246,24 @@ TREND_CRAWLER_RUNTIME_TIMEOUT_SECONDS = (
 TREND_CRAWLER_RUNTIME_LOGIN_TYPE = APP_CONFIG.trend_crawler_runtime.login_type
 
 XIAOHONGSHU_LOGIN_TYPE = APP_CONFIG.xiaohongshu.login_type
-XIAOHONGSHU_SEARCH_KEYWORDS = APP_CONFIG.xiaohongshu.keyword_search.keywords
+XIAOHONGSHU_KEYWORD_SEARCH_ENABLED = APP_CONFIG.xiaohongshu.keyword_search.enabled
+XIAOHONGSHU_ACCOUNT_CRAWL_ENABLED = APP_CONFIG.xiaohongshu.account_crawl.enabled
+XIAOHONGSHU_SEARCH_KEYWORDS = (
+    APP_CONFIG.xiaohongshu.keyword_search.keywords
+    if XIAOHONGSHU_KEYWORD_SEARCH_ENABLED
+    else []
+)
 XIAOHONGSHU_MAX_RESULTS_PER_KEYWORD = (
     APP_CONFIG.xiaohongshu.keyword_search.max_results_per_keyword
 )
 XIAOHONGSHU_KEYWORD_TIME_RANGE_HOURS = _time_range_hours(
     APP_CONFIG.xiaohongshu.keyword_search.time_range_hours
 )
-XIAOHONGSHU_CREATOR_URLS = APP_CONFIG.xiaohongshu.account_crawl.creator_urls
+XIAOHONGSHU_CREATOR_URLS = (
+    APP_CONFIG.xiaohongshu.account_crawl.creator_urls
+    if XIAOHONGSHU_ACCOUNT_CRAWL_ENABLED
+    else []
+)
 XIAOHONGSHU_MAX_RESULTS_PER_ACCOUNT = (
     APP_CONFIG.xiaohongshu.account_crawl.max_results_per_account
 )
@@ -253,14 +273,24 @@ XIAOHONGSHU_ACCOUNT_TIME_RANGE_HOURS = _time_range_hours(
 XIAOHONGSHU_COOKIE = os.getenv("XIAOHONGSHU_COOKIE", "").strip()
 
 ZHIHU_LOGIN_TYPE = APP_CONFIG.zhihu.login_type
-ZHIHU_SEARCH_KEYWORDS = APP_CONFIG.zhihu.keyword_search.keywords
+ZHIHU_KEYWORD_SEARCH_ENABLED = APP_CONFIG.zhihu.keyword_search.enabled
+ZHIHU_ACCOUNT_CRAWL_ENABLED = APP_CONFIG.zhihu.account_crawl.enabled
+ZHIHU_SEARCH_KEYWORDS = (
+    APP_CONFIG.zhihu.keyword_search.keywords
+    if ZHIHU_KEYWORD_SEARCH_ENABLED
+    else []
+)
 ZHIHU_MAX_RESULTS_PER_KEYWORD = (
     APP_CONFIG.zhihu.keyword_search.max_results_per_keyword
 )
 ZHIHU_KEYWORD_TIME_RANGE_HOURS = _time_range_hours(
     APP_CONFIG.zhihu.keyword_search.time_range_hours
 )
-ZHIHU_CREATOR_URLS = APP_CONFIG.zhihu.account_crawl.creator_urls
+ZHIHU_CREATOR_URLS = (
+    APP_CONFIG.zhihu.account_crawl.creator_urls
+    if ZHIHU_ACCOUNT_CRAWL_ENABLED
+    else []
+)
 ZHIHU_MAX_RESULTS_PER_ACCOUNT = (
     APP_CONFIG.zhihu.account_crawl.max_results_per_account
 )
@@ -280,9 +310,9 @@ GOOGLE_NEWS_COUNTRY = APP_CONFIG.google_news.country
 GOOGLE_NEWS_PROXY_URL = os.getenv("GOOGLE_NEWS_PROXY_URL", "").strip()
 
 # ==================== AI HOT 强参考源 ====================
-AIHOT_KEYWORDS = APP_CONFIG.aihot.keywords
-AIHOT_MODE = APP_CONFIG.aihot.mode
-AIHOT_CATEGORIES = APP_CONFIG.aihot.categories
+AIHOT_KEYWORDS = []
+AIHOT_MODE = "selected"
+AIHOT_CATEGORIES = []
 AIHOT_MAX_RESULTS_PER_QUERY = APP_CONFIG.aihot.max_results_per_query
 AIHOT_BASE_URL = APP_CONFIG.aihot.base_url.rstrip("/")
 AIHOT_REQUEST_TIMEOUT_SECONDS = APP_CONFIG.aihot.request_timeout_seconds

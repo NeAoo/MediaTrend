@@ -1,6 +1,6 @@
 export type AnyConfig = Record<string, any>;
 
-export type PageKey = 'dashboard' | 'sources' | 'scoring' | 'history' | 'reports' | 'system';
+export type PageKey = 'dashboard' | 'sources' | 'scoring' | 'hotrank' | 'history' | 'reports' | 'system';
 
 export type ConfigResponse = {
   config: AnyConfig;
@@ -21,6 +21,7 @@ export type JobSnapshot = {
   execution_mode: 'serial' | 'parallel';
   created_at: string;
   updated_at: string;
+  cancel_requested: boolean;
   events_count: number;
   artifacts: Record<string, any>;
   errors: string[];
@@ -40,6 +41,17 @@ export type JobEvent = {
   expected_min_count?: number;
   progress?: number;
   created_at: string;
+};
+
+export type SourceAuthState = {
+  source: string;
+  display_name: string;
+  requires_login: boolean;
+  status: 'not_required' | 'online' | 'offline' | 'login_waiting' | 'checking' | 'error';
+  label: string;
+  message: string;
+  login_url: string;
+  checked_by: string;
 };
 
 export type SystemStatus = {

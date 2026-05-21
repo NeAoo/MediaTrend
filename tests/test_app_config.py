@@ -175,6 +175,34 @@ aihot:
     assert config.aihot.max_results_per_query == 30
 
 
+def test_web_defaults_load_from_yaml(tmp_path):
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+enabled_sources:
+  - google_news
+google_news:
+  keywords:
+    - 教育
+web:
+  default_execution_mode: serial
+  default_run_mode: collect_only
+  unit_timeout_seconds: 90
+wechat:
+  account_crawl:
+    accounts:
+      - 人民教育
+""",
+        encoding="utf-8",
+    )
+
+    config = load_app_config(config_file)
+
+    assert config.web.default_execution_mode == "serial"
+    assert config.web.default_run_mode == "collect_only"
+    assert config.web.unit_timeout_seconds == 90
+
+
 def test_enabled_creator_source_accepts_empty_keywords_when_creator_urls_exist(tmp_path):
     config_file = tmp_path / "config.yaml"
     config_file.write_text(
@@ -206,6 +234,62 @@ wechat:
 
     assert config.xiaohongshu.account_crawl.creator_urls
     assert config.zhihu.account_crawl.creator_urls
+
+
+def test_enabled_creator_source_ignores_disabled_submode_inputs(tmp_path):
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+enabled_sources:
+  - xiaohongshu
+xiaohongshu:
+  keyword_search:
+    enabled: false
+    keywords:
+      - 不参与采集
+  account_crawl:
+    enabled: true
+    creator_urls:
+      - https://www.xiaohongshu.com/user/profile/5f58bd990000000001003753?xsec_token=token&xsec_source=pc_search
+wechat:
+  account_crawl:
+    accounts:
+      - 人民教育
+""",
+        encoding="utf-8",
+    )
+
+    config = load_app_config(config_file)
+
+    assert config.xiaohongshu.keyword_search.enabled is False
+    assert config.xiaohongshu.account_crawl.enabled is True
+
+
+def test_enabled_creator_source_fails_when_all_submodes_disabled(tmp_path):
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+enabled_sources:
+  - zhihu
+zhihu:
+  keyword_search:
+    enabled: false
+    keywords:
+      - 不参与采集
+  account_crawl:
+    enabled: false
+    creator_urls:
+      - https://www.zhihu.com/people/yd1234567
+wechat:
+  account_crawl:
+    accounts:
+      - 人民教育
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigValidationError, match="zhihu enabled"):
+        load_app_config(config_file)
 
 
 def test_google_news_requires_keywords_when_enabled(tmp_path):

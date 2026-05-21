@@ -15,3 +15,14 @@ def test_job_store_writes_status_and_events(tmp_path: Path):
     assert (tmp_path / snapshot.job_id / "status.json").exists()
     event_lines = (tmp_path / snapshot.job_id / "events.jsonl").read_text(encoding="utf-8").splitlines()
     assert json.loads(event_lines[0])["source"] == "aihot"
+
+
+def test_job_store_records_cancel_request(tmp_path: Path):
+    store = JobStore(tmp_path)
+    snapshot = store.create_job(run_mode="collect_only", execution_mode="serial")
+
+    updated = store.request_cancel(snapshot.job_id)
+
+    assert updated.status == "queued"
+    assert updated.cancel_requested is True
+    assert store.is_cancel_requested(snapshot.job_id) is True

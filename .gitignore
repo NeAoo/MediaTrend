@@ -49,10 +49,12 @@ coverage.xml
 !.env.example
 config.yaml
 config.*.yaml
+config.yaml.bak.*
 
 # 临时文件
 nul
 *.html
+!web/frontend/index.html
 .DS_Store
 .superpowers/
 .playwright-cli/

@@ -249,12 +249,12 @@ aihot:
     assert settings.GOOGLE_NEWS_KEYWORDS == ["通用词"]
     assert settings.GOOGLE_NEWS_PERIOD == "24h"
     assert settings.GOOGLE_NEWS_PROXY_URL == "http://127.0.0.1:9899"
-    assert settings.AIHOT_KEYWORDS == ["OpenAI"]
-    assert settings.AIHOT_MODE == "all"
-    assert settings.AIHOT_CATEGORIES == ["ai-models"]
+    assert settings.AIHOT_KEYWORDS == []
+    assert settings.AIHOT_MODE == "selected"
+    assert settings.AIHOT_CATEGORIES == []
     assert settings.AIHOT_MAX_RESULTS_PER_QUERY == 25
     assert settings.AIHOT_BASE_URL == "https://aihot.virxact.com"
     assert settings.AIHOT_REQUEST_TIMEOUT_SECONDS == 12
     assert settings.AIHOT_USER_AGENT == "test-agent/1.0"
-    assert settings.get_source_keywords("aihot") == ["OpenAI"]
+    assert settings.get_source_keywords("aihot") == []
     assert settings.get_source_keyword_time_range("aihot") == (0, 24)

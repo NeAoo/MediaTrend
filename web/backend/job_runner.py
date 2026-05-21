@@ -16,7 +16,12 @@ from web.backend.progress import count_progress, expected_count_warning
 
 
 MAX_SOURCE_WORKERS = 4
+AUTH_SENSITIVE_BATCH_SOURCES = {"zhihu"}
 UnitType = Literal["source", "keyword", "account"]
+
+
+class JobCancelledError(RuntimeError):
+    pass
 
 
 @dataclass
@@ -37,6 +42,13 @@ class CrawlUnit:
     account_time_range: tuple[int, int] | None
     max_count: int
     expected_min: int
+    runtime_timeout_seconds: int | None = None
+
+
+@dataclass
+class UnitCollectionResult:
+    items: list[EducationHotspot]
+    errors: list[str]
 
 
 def _reload_runtime_modules() -> None:
@@ -64,6 +76,8 @@ def _reload_runtime_modules() -> None:
 def _source_units(config: AppConfig, source_name: str) -> list[CrawlUnit]:
     if source_name == "wechat":
         item = config.wechat.keyword_search
+        if not item.enabled:
+            return []
         return [
             CrawlUnit(
                 unit_type="keyword",
@@ -79,6 +93,8 @@ def _source_units(config: AppConfig, source_name: str) -> list[CrawlUnit]:
         ]
     if source_name == "wechat_mp":
         item = config.wechat.account_crawl
+        if not item.enabled:
+            return []
         return [
             CrawlUnit(
                 unit_type="account",
@@ -105,9 +121,10 @@ def _source_units(config: AppConfig, source_name: str) -> list[CrawlUnit]:
                 account_time_range=None,
                 max_count=keyword_item.max_results_per_keyword,
                 expected_min=keyword_item.expected_min_results,
+                runtime_timeout_seconds=config.web.unit_timeout_seconds,
             )
             for keyword in keyword_item.keywords
-        ]
+        ] if keyword_item.enabled else []
         account_units = [
             CrawlUnit(
                 unit_type="account",
@@ -118,48 +135,110 @@ def _source_units(config: AppConfig, source_name: str) -> list[CrawlUnit]:
                 account_time_range=(account_item.time_range_hours.min, account_item.time_range_hours.max),
                 max_count=account_item.max_results_per_account,
                 expected_min=account_item.expected_min_results,
+                runtime_timeout_seconds=config.web.unit_timeout_seconds,
             )
             for url in account_item.creator_urls
-        ]
+        ] if account_item.enabled else []
         return keyword_units + account_units
     if source_name == "zhihu":
         keyword_item = config.zhihu.keyword_search
         account_item = config.zhihu.account_crawl
-        keyword_units = [
-            CrawlUnit(
-                unit_type="keyword",
-                unit_name=keyword,
-                keywords=[keyword],
-                creator_urls=[],
-                keyword_time_range=(keyword_item.time_range_hours.min, keyword_item.time_range_hours.max),
-                account_time_range=None,
-                max_count=keyword_item.max_results_per_keyword,
-                expected_min=keyword_item.expected_min_results,
-            )
-            for keyword in keyword_item.keywords
-        ]
-        account_units = [
-            CrawlUnit(
-                unit_type="account",
-                unit_name=url,
-                keywords=[],
-                creator_urls=[url],
-                keyword_time_range=None,
-                account_time_range=(account_item.time_range_hours.min, account_item.time_range_hours.max),
-                max_count=account_item.max_results_per_account,
-                expected_min=account_item.expected_min_results,
-            )
-            for url in account_item.creator_urls
-        ]
+        keyword_units = []
+        if keyword_item.enabled and keyword_item.keywords:
+            if source_name in AUTH_SENSITIVE_BATCH_SOURCES:
+                keyword_units = [
+                    CrawlUnit(
+                        unit_type="keyword",
+                        unit_name=f"关键词批量：{'、'.join(keyword_item.keywords)}",
+                        keywords=list(keyword_item.keywords),
+                        creator_urls=[],
+                        keyword_time_range=(
+                            keyword_item.time_range_hours.min,
+                            keyword_item.time_range_hours.max,
+                        ),
+                        account_time_range=None,
+                        max_count=keyword_item.max_results_per_keyword
+                        * len(keyword_item.keywords),
+                        expected_min=keyword_item.expected_min_results
+                        * len(keyword_item.keywords),
+                        runtime_timeout_seconds=config.web.unit_timeout_seconds,
+                    )
+                ]
+            else:
+                keyword_units = [
+                    CrawlUnit(
+                        unit_type="keyword",
+                        unit_name=keyword,
+                        keywords=[keyword],
+                        creator_urls=[],
+                        keyword_time_range=(
+                            keyword_item.time_range_hours.min,
+                            keyword_item.time_range_hours.max,
+                        ),
+                        account_time_range=None,
+                        max_count=keyword_item.max_results_per_keyword,
+                        expected_min=keyword_item.expected_min_results,
+                        runtime_timeout_seconds=config.web.unit_timeout_seconds,
+                    )
+                    for keyword in keyword_item.keywords
+                ]
+        account_units = []
+        if account_item.enabled and account_item.creator_urls:
+            if source_name in AUTH_SENSITIVE_BATCH_SOURCES:
+                account_unit_name = (
+                    account_item.creator_urls[0]
+                    if len(account_item.creator_urls) == 1
+                    else f"账号批量：{len(account_item.creator_urls)} 个账号"
+                )
+                account_units = [
+                    CrawlUnit(
+                        unit_type="account",
+                        unit_name=account_unit_name,
+                        keywords=[],
+                        creator_urls=list(account_item.creator_urls),
+                        keyword_time_range=None,
+                        account_time_range=(
+                            account_item.time_range_hours.min,
+                            account_item.time_range_hours.max,
+                        ),
+                        max_count=account_item.max_results_per_account
+                        * len(account_item.creator_urls),
+                        expected_min=account_item.expected_min_results
+                        * len(account_item.creator_urls),
+                        runtime_timeout_seconds=config.web.unit_timeout_seconds,
+                    )
+                ]
+            else:
+                account_units = [
+                    CrawlUnit(
+                        unit_type="account",
+                        unit_name=url,
+                        keywords=[],
+                        creator_urls=[url],
+                        keyword_time_range=None,
+                        account_time_range=(
+                            account_item.time_range_hours.min,
+                            account_item.time_range_hours.max,
+                        ),
+                        max_count=account_item.max_results_per_account,
+                        expected_min=account_item.expected_min_results,
+                        runtime_timeout_seconds=config.web.unit_timeout_seconds,
+                    )
+                    for url in account_item.creator_urls
+                ]
         return keyword_units + account_units
     if source_name == "google_news":
+        keyword_time_range = (
+            config.collection.time_range_hours.min,
+            config.collection.time_range_hours.max,
+        )
         return [
             CrawlUnit(
                 unit_type="keyword",
                 unit_name=keyword,
                 keywords=[keyword],
                 creator_urls=[],
-                keyword_time_range=None,
+                keyword_time_range=keyword_time_range,
                 account_time_range=None,
                 max_count=config.google_news.max_results_per_keyword,
                 expected_min=config.google_news.expected_min_results,
@@ -167,19 +246,21 @@ def _source_units(config: AppConfig, source_name: str) -> list[CrawlUnit]:
             for keyword in config.google_news.keywords
         ]
     if source_name == "aihot":
-        keywords = config.aihot.keywords or ["精选池"]
+        keyword_time_range = (
+            config.collection.time_range_hours.min,
+            config.collection.time_range_hours.max,
+        )
         return [
             CrawlUnit(
                 unit_type="source",
-                unit_name=keyword,
-                keywords=[] if keyword == "精选池" else [keyword],
+                unit_name="精选池",
+                keywords=[],
                 creator_urls=[],
-                keyword_time_range=None,
+                keyword_time_range=keyword_time_range,
                 account_time_range=None,
                 max_count=config.aihot.max_results_per_query,
                 expected_min=config.aihot.expected_min_results,
             )
-            for keyword in keywords
         ]
     return []
 
@@ -204,19 +285,34 @@ def _deduplicate(items: list[EducationHotspot]) -> list[EducationHotspot]:
     return unique_items
 
 
-def collect_one_unit(source_name: str, unit: CrawlUnit) -> list[EducationHotspot]:
-    from crawlers.manager import CrawlerManager
+def collect_one_unit(source_name: str, unit: CrawlUnit) -> UnitCollectionResult:
+    from crawlers.manager import CRAWLER_MAP
 
-    manager = CrawlerManager(enabled_sources=[source_name])
-    return manager.collect_all(
-        source_keywords={source_name: unit.keywords},
-        source_creator_urls={source_name: unit.creator_urls},
-        source_keyword_time_ranges=(
-            {source_name: unit.keyword_time_range} if unit.keyword_time_range else None
-        ),
-        source_account_time_ranges=(
-            {source_name: unit.account_time_range} if unit.account_time_range else None
-        ),
+    module_name, class_name = CRAWLER_MAP[source_name]
+    module = importlib.import_module(module_name)
+    crawler = getattr(module, class_name)()
+
+    if source_name in {"xiaohongshu", "zhihu"}:
+        result = crawler.collect(
+            unit.keywords,
+            time_range_hours=unit.keyword_time_range,
+            creator_urls=unit.creator_urls,
+            creator_time_range_hours=unit.account_time_range,
+            runtime_timeout_seconds=unit.runtime_timeout_seconds,
+        )
+    elif source_name == "wechat_mp":
+        result = crawler.collect(
+            unit.keywords,
+            time_range_hours=unit.account_time_range,
+        )
+    else:
+        result = crawler.collect(
+            unit.keywords,
+            time_range_hours=unit.keyword_time_range,
+        )
+    return UnitCollectionResult(
+        items=list(result.items),
+        errors=list(result.error_messages),
     )
 
 
@@ -266,10 +362,13 @@ def _collect_source_units(
     source_name: str,
     config: AppConfig,
     emit_event: Callable[..., None],
+    should_cancel: Callable[[], bool],
 ) -> tuple[list[EducationHotspot], list[str]]:
     source_items: list[EducationHotspot] = []
     warnings: list[str] = []
     for unit in _source_units(config, source_name):
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         emit_event(
             type="unit_started",
             source=source_name,
@@ -281,7 +380,46 @@ def _collect_source_units(
             progress=0.05,
             message=f"{source_name} / {unit.unit_name} 开始",
         )
-        items = collect_one_unit(source_name, unit)
+        try:
+            unit_result = collect_one_unit(source_name, unit)
+        except Exception as exc:
+            warning = f"{source_name} / {unit.unit_name} 采集失败：{exc}"
+            warnings.append(warning)
+            emit_event(
+                type="unit_failed",
+                source=source_name,
+                unit_type=unit.unit_type,
+                unit_name=unit.unit_name,
+                status="failed",
+                current_count=0,
+                max_count=unit.max_count,
+                expected_min_count=unit.expected_min,
+                progress=1.0,
+                message=warning,
+            )
+            continue
+
+        items = unit_result.items
+        if unit_result.errors:
+            warning = f"{source_name} / {unit.unit_name} 采集异常：{'；'.join(unit_result.errors)}"
+            warnings.append(warning)
+            emit_event(
+                type="unit_failed",
+                source=source_name,
+                unit_type=unit.unit_type,
+                unit_name=unit.unit_name,
+                status="failed",
+                current_count=len(items),
+                max_count=unit.max_count,
+                expected_min_count=unit.expected_min,
+                progress=count_progress(len(items), unit.max_count),
+                message=warning,
+            )
+            source_items.extend(items)
+            if should_cancel():
+                raise JobCancelledError("任务已取消")
+            continue
+
         warning = expected_count_warning(unit.unit_name, len(items), unit.expected_min)
         if warning:
             warnings.append(warning)
@@ -298,6 +436,8 @@ def _collect_source_units(
             message=f"{source_name} / {unit.unit_name} 完成：{len(items)} 条",
         )
         source_items.extend(items)
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
     return (_deduplicate(source_items), warnings)
 
 
@@ -305,10 +445,13 @@ def _collect_sources_serial(
     sources: list[str],
     config: AppConfig,
     emit_event: Callable[..., None],
+    should_cancel: Callable[[], bool],
 ) -> tuple[list[EducationHotspot], list[str]]:
     all_items: list[EducationHotspot] = []
     warnings: list[str] = []
     for source_name in sources:
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         max_count, expected_min = _source_result_plan(config, source_name)
         emit_event(
             type="source_started",
@@ -321,7 +464,7 @@ def _collect_sources_serial(
             progress=0.05,
             message=f"{source_name} 开始采集",
         )
-        items, unit_warnings = _collect_source_units(source_name, config, emit_event)
+        items, unit_warnings = _collect_source_units(source_name, config, emit_event, should_cancel)
         warnings.extend(unit_warnings)
         warning = expected_count_warning(source_name, len(items), expected_min)
         if warning:
@@ -339,6 +482,8 @@ def _collect_sources_serial(
             message=f"{source_name} 完成：{len(items)} 条",
         )
         all_items.extend(items)
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
     return (_deduplicate(all_items), warnings)
 
 
@@ -346,11 +491,14 @@ def _collect_sources_parallel(
     sources: list[str],
     config: AppConfig,
     emit_event: Callable[..., None],
+    should_cancel: Callable[[], bool],
 ) -> tuple[list[EducationHotspot], list[str]]:
     all_items: list[EducationHotspot] = []
     warnings: list[str] = []
     worker_count = min(MAX_SOURCE_WORKERS, max(1, len(sources)))
     for source_name in sources:
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         max_count, expected_min = _source_result_plan(config, source_name)
         emit_event(
             type="source_started",
@@ -365,10 +513,12 @@ def _collect_sources_parallel(
         )
     with ThreadPoolExecutor(max_workers=worker_count) as executor:
         future_to_source = {
-            executor.submit(_collect_source_units, source_name, config, emit_event): source_name
+            executor.submit(_collect_source_units, source_name, config, emit_event, should_cancel): source_name
             for source_name in sources
         }
         for future in as_completed(future_to_source):
+            if should_cancel():
+                raise JobCancelledError("任务已取消")
             source_name = future_to_source[future]
             max_count, expected_min = _source_result_plan(config, source_name)
             try:
@@ -403,6 +553,8 @@ def _collect_sources_parallel(
                 message=f"{source_name} 完成：{len(items)} 条",
             )
             all_items.extend(items)
+            if should_cancel():
+                raise JobCancelledError("任务已取消")
     return (_deduplicate(all_items), warnings)
 
 
@@ -411,15 +563,20 @@ def run_web_job(
     snapshot: JobSnapshot,
     config_path: Path = Path("config.yaml"),
 ) -> JobSnapshot:
-    snapshot = store.update_job(snapshot, status="running")
+    snapshot = store.update_job(store.load_job(snapshot.job_id), status="running")
 
     def emit_event(**event_fields) -> None:
         store.append_event(snapshot.job_id, **event_fields)
+
+    def should_cancel() -> bool:
+        return store.is_cancel_requested(snapshot.job_id)
 
     try:
         _reload_runtime_modules()
         config = load_app_config(config_path)
         selected_sources = list(config.enabled_sources)
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         emit_event(
             type="job_started",
             unit_type="stage",
@@ -429,9 +586,11 @@ def run_web_job(
             message=f"任务启动：{', '.join(selected_sources)}",
         )
         if snapshot.execution_mode == "parallel":
-            hotspots, warnings = _collect_sources_parallel(selected_sources, config, emit_event)
+            hotspots, warnings = _collect_sources_parallel(selected_sources, config, emit_event, should_cancel)
         else:
-            hotspots, warnings = _collect_sources_serial(selected_sources, config, emit_event)
+            hotspots, warnings = _collect_sources_serial(selected_sources, config, emit_event, should_cancel)
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         if not hotspots:
             raise RuntimeError("所有来源均未采集到内容")
 
@@ -447,12 +606,16 @@ def run_web_job(
         scoring_enabled = (
             snapshot.run_mode == "collect_score_report" and config.scoring.enabled
         )
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         artifacts = run_merge_score_report(
             hotspots=hotspots,
             selected_sources=selected_sources,
             scoring_enabled=scoring_enabled,
             output_root=store.job_dir(snapshot.job_id),
         )
+        if should_cancel():
+            raise JobCancelledError("任务已取消")
         store.save_artifacts(snapshot.job_id, asdict(artifacts))
         emit_event(
             type="job_completed",
@@ -468,7 +631,35 @@ def run_web_job(
             artifacts=asdict(artifacts),
             warnings=warnings,
         )
+    except JobCancelledError:
+        emit_event(
+            type="job_cancelled",
+            unit_type="stage",
+            unit_name="job",
+            status="cancelled",
+            progress=1.0,
+            message="任务已取消",
+        )
+        return store.update_job(
+            store.load_job(snapshot.job_id),
+            status="cancelled",
+            cancel_requested=True,
+        )
     except Exception as exc:
+        if should_cancel():
+            emit_event(
+                type="job_cancelled",
+                unit_type="stage",
+                unit_name="job",
+                status="cancelled",
+                progress=1.0,
+                message="任务已取消",
+            )
+            return store.update_job(
+                store.load_job(snapshot.job_id),
+                status="cancelled",
+                cancel_requested=True,
+            )
         message = str(exc)
         emit_event(
             type="job_failed",

@@ -22,7 +22,8 @@ enabled_sources:
 collection:
   # 初始最多保留多少条进入后续去重、评分、报告链路。
   initial_collect_count: 30
-  # 全局默认时间窗口，单位：小时。平台内单独配置会覆盖这里。
+  # 全局默认时间窗口。前端“几天内”会写成 max=天数*24、min=0。
+  # 运行时按最近 N 小时滚动过滤：max=24 表示最近 24 小时。
   time_range_hours:
     min: 0
     max: 24
@@ -35,6 +36,7 @@ selection:
 wechat:
   # source=wechat：搜狗微信关键词搜索。
   keyword_search:
+    enabled: true
     keywords:
       - 教育改革
       - 中考
@@ -42,7 +44,7 @@ wechat:
     max_results_per_keyword: 8
     # 前端进度预期值，只用于提示“低于预期”，不作为采集硬约束。
     expected_min_results: 3
-    # 关键词搜索的时间窗口，单位：小时。
+    # 关键词搜索的时间窗口。前端“几天内”会写成 max=天数*24、min=0。
     time_range_hours:
       min: 0
       max: 48
@@ -54,6 +56,7 @@ wechat:
   # source=wechat_mp：微信公众平台后台，按固定公众号账号抓取。
   # 这里填公众号名称，不是关键词。
   account_crawl:
+    enabled: true
     accounts:
       - 中国教育报
       - 人民教育
@@ -61,7 +64,7 @@ wechat:
     max_results_per_account: 10
     # 前端进度预期值，只用于提示“低于预期”，不作为采集硬约束。
     expected_min_results: 3
-    # 公众号账号抓取的时间窗口，单位：小时。
+    # 公众号账号抓取的时间窗口。前端“几天内”会写成 max=天数*24、min=0。
     time_range_hours:
       min: 0
       max: 168
@@ -101,11 +104,13 @@ trend_crawler_runtime:
 xiaohongshu:
   # source=xiaohongshu：关键词搜索。
   keyword_search:
+    enabled: true
     keywords:
       - 教育改革
       - 中考
     max_results_per_keyword: 20
     expected_min_results: 3
+    # 前端“几天内”会写成 max=天数*24、min=0。
     time_range_hours:
       min: 0
       max: 48
@@ -113,12 +118,14 @@ xiaohongshu:
   # source=xiaohongshu：指定账号主页抓取。
   # 这里必须填账号主页 URL，不是账号昵称，也不是搜索账号名。
   account_crawl:
+    enabled: true
     creator_urls: []
     # 示例：
     # creator_urls:
     #   - https://www.xiaohongshu.com/user/profile/<user_id>?xsec_token=<token>&xsec_source=pc_search
     max_results_per_account: 20
     expected_min_results: 3
+    # 前端“几天内”会写成 max=天数*24、min=0。
     time_range_hours:
       min: 0
       max: 168
@@ -128,11 +135,13 @@ xiaohongshu:
 zhihu:
   # source=zhihu：关键词搜索。
   keyword_search:
+    enabled: true
     keywords:
       - 教育改革
       - 中考
     max_results_per_keyword: 20
     expected_min_results: 3
+    # 前端“几天内”会写成 max=天数*24、min=0。
     time_range_hours:
       min: 0
       max: 72
@@ -140,12 +149,14 @@ zhihu:
   # source=zhihu：指定用户主页抓取。
   # 这里必须填用户主页 URL，不是昵称关键词。
   account_crawl:
+    enabled: true
     creator_urls: []
     # 示例：
     # creator_urls:
     #   - https://www.zhihu.com/people/<url_token>
     max_results_per_account: 20
     expected_min_results: 3
+    # 前端“几天内”会写成 max=天数*24、min=0。
     time_range_hours:
       min: 0
       max: 168
@@ -166,17 +177,10 @@ google_news:
 
 # ==================== AI HOT ====================
 # source=aihot：AI 行业强参考源，不需要账号或 token。
-# 默认不填 keywords 时拉取精选池；填写 keywords 时走 AI HOT API 的 q= 搜索。
+# 固定使用 selected 精选池；是否采集只看 enabled_sources 是否包含 aihot。
 aihot:
-  # selected = 精选候选池；all = 全部 AI 动态。日常建议 selected。
   mode: selected
   keywords: []
-  # 示例：
-  # keywords:
-  #   - OpenAI
-  #   - Agent
-  # 可选分类。为空表示不过滤分类。
-  # 取值：ai-models / ai-products / industry / paper / tip
   categories: []
   # 每个 query 最多返回多少条。AI HOT API 上限 100。
   max_results_per_query: 50
@@ -189,6 +193,7 @@ aihot:
 # ==================== 打分模型 ====================
 # enabled=false 时只采集并合并 JSON，不调用大模型、不生成评分报告。
 # API Key 属于密钥，写在 .env 的 LLM_API_KEY，不写在这里。
+# 用途：采集完成后，对每篇候选内容做教育热点综合评分。
 scoring:
   enabled: true
   base_url: https://api.openai.com/v1
@@ -203,6 +208,32 @@ scoring:
   prompt:
     system_path: ./prompts/scoring_system_prompt.md
     user_path: ./prompts/scoring_user_prompt.md
+
+# ==================== 全网热榜 ====================
+# 用途：/hotrank 页面刷新后，对聚合出来的全网趋势做主题分类。
+# API Key 仍然复用 .env 的 LLM_API_KEY；模型、网关、并发、超时与正文打分分开配置。
+hotrank:
+  ai_classification:
+    enabled: true
+    base_url: https://api.openai.com/v1
+    model: gpt-5.4
+    workers: 32
+    timeout_seconds: 120
+    max_retries: 1
+    max_completion_tokens: 80
+    reasoning_effort: ""
+    prompt:
+      system_path: ./prompts/hotrank_classification_system_prompt.md
+      user_path: ./prompts/hotrank_classification_user_prompt.md
+
+# ==================== Web 工作台默认值 ====================
+# default_execution_mode: parallel = 多来源并行；serial = 一个来源跑完再跑下一个。
+# default_run_mode: collect_score_report = 采集+打分；collect_only = 只采集和合并。
+# unit_timeout_seconds = 单个关键词/账号的最长运行时间；超时后跳过这个单元继续后续来源。
+web:
+  default_execution_mode: parallel
+  default_run_mode: collect_score_report
+  unit_timeout_seconds: 180
 
 # ==================== 输出 ====================
 output:

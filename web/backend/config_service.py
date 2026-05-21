@@ -81,3 +81,19 @@ def validate_scoring_prompt(system_prompt: str, user_prompt: str) -> list[str]:
     except (ValueError, json.JSONDecodeError):
         warnings.append("user prompt 中的第一个 JSON 示例无法直接解析")
     return warnings
+
+
+def validate_hotrank_prompt(system_prompt: str, user_prompt: str) -> list[str]:
+    warnings: list[str] = []
+    if not system_prompt.strip():
+        warnings.append("热榜分类 system prompt 为空")
+    if not user_prompt.strip():
+        warnings.append("热榜分类 user prompt 为空")
+    if "{categories}" not in system_prompt:
+        warnings.append("热榜分类 system prompt 缺少变量 {categories}")
+    for field_name in ["title", "current_category", "platform_count", "evidence"]:
+        if "{" + field_name + "}" not in user_prompt:
+            warnings.append(f"热榜分类 user prompt 缺少变量 {{{field_name}}}")
+    if "category" not in user_prompt:
+        warnings.append("热榜分类 user prompt 未包含 category 字段说明")
+    return warnings
